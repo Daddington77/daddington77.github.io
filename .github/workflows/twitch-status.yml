@@ -1,0 +1,94 @@
+name: Update Twitch Status
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # every 5 min (free on public repos)
+  workflow_dispatch:          # lets you trigger it manually too
+
+jobs:
+  update-status:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write         # needed to push the JSON file back to the repo
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Fetch Twitch status and write JSON
+        env:
+          TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+          TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
+          TWITCH_USER_LOGIN: ${{ secrets.TWITCH_USER_LOGIN }}
+        run: |
+          # Step 1: get an app access token
+          TOKEN_RESPONSE=$(curl -s -X POST "https://id.twitch.tv/oauth2/token" \
+            -d "client_id=${TWITCH_CLIENT_ID}" \
+            -d "client_secret=${TWITCH_CLIENT_SECRET}" \
+            -d "grant_type=client_credentials")
+
+          ACCESS_TOKEN=$(echo "$TOKEN_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+
+          # Step 2: check stream status
+          STREAM_RESPONSE=$(curl -s \
+            -H "Client-ID: ${TWITCH_CLIENT_ID}" \
+            -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+            "https://api.twitch.tv/helix/streams?user_login=${TWITCH_USER_LOGIN}")
+
+          # Step 3: parse and write to status.json
+          python3 << 'EOF'
+          import json, os, sys
+
+          with open("stream_response.json", "w") as f:
+            f.write(os.popen("echo '" + os.environ.get('STREAM_RESPONSE_RAW', '{}') + "'").read())
+          EOF
+
+          # Simpler: write the full response, then parse with python
+          echo "$STREAM_RESPONSE" > /tmp/stream_raw.json
+
+          python3 << 'EOF'
+          import json, os
+          from datetime import datetime, timezone
+
+          with open("/tmp/stream_raw.json") as f:
+              raw = json.load(f)
+
+          data = raw.get("data", [])
+          now = datetime.now(timezone.utc).isoformat()
+
+          if data:
+              stream = data[0]
+              # Fix thumbnail URL placeholders
+              thumbnail = stream.get("thumbnail_url", "")
+              thumbnail = thumbnail.replace("{width}", "1280").replace("{height}", "720")
+
+              output = {
+                  "is_live": True,
+                  "title": stream.get("title", ""),
+                  "game_name": stream.get("game_name", ""),
+                  "viewer_count": stream.get("viewer_count", 0),
+                  "started_at": stream.get("started_at", ""),
+                  "thumbnail_url": thumbnail,
+                  "last_checked": now
+              }
+          else:
+              output = {
+                  "is_live": False,
+                  "last_checked": now
+              }
+
+          os.makedirs("data", exist_ok=True)
+          with open("data/twitch-status.json", "w") as f:
+              json.dump(output, f, indent=2)
+
+          print("Written:", json.dumps(output, indent=2))
+          EOF
+
+      - name: Commit and push status.json
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/twitch-status.json
+          # Only commit if something actually changed
+          git diff --cached --quiet || git commit -m "chore: update twitch status [skip ci]"
+          git push
