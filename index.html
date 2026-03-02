@@ -402,12 +402,11 @@
 
                 <!-- Stripe Elements mount point -->
                 <div class="px-6 pb-4">
-                    <div class="min-h-[200px] relative">
+                    <div id="payment-element" class="min-h-[200px]">
                         <div id="stripeLoading" class="flex flex-col items-center justify-center py-12 text-gray-400 gap-3">
                             <div class="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
                             <span class="text-sm">Loading payment form...</span>
                         </div>
-                        <div id="payment-element"></div>
                     </div>
                     <div id="payment-message" class="hidden mt-3 text-sm text-red-400 text-center"></div>
                 </div>
@@ -822,7 +821,7 @@
             spinner.classList.remove('hidden');
             msg.classList.add('hidden');
 
-            const { error, paymentIntent } = await stripe.confirmPayment({
+            const { error } = await stripe.confirmPayment({
                 elements,
                 confirmParams: {
                     return_url: 'https://daddington77.github.io/success.html',
@@ -836,8 +835,8 @@
                 btn.disabled = false;
                 btnText.textContent = 'PAY NOW';
                 spinner.classList.add('hidden');
-            } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-                // Card payment succeeded without redirect
+            } else {
+                closePaymentModal();
                 cart = [];
                 updateCart();
                 window.location.href = 'https://daddington77.github.io/success.html';
@@ -858,9 +857,8 @@
                 paymentElement = null;
                 elements = null;
             }
-            // Reset DOM back to loading state
             document.getElementById('stripeLoading').style.display = 'flex';
-            document.getElementById('payment-element').innerHTML = '';
+            document.getElementById('payment-element').innerHTML = '<div id="stripeLoading" class="flex flex-col items-center justify-center py-12 text-gray-400 gap-3"><div class="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div><span class="text-sm">Loading payment form...</span></div>';
             document.getElementById('payment-message').classList.add('hidden');
             const payBtn = document.getElementById('payNowBtn');
             payBtn.disabled = true;
