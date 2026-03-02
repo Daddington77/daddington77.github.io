@@ -150,63 +150,56 @@
     <!-- Live Stream -->
     <section id="live" class="py-20 px-4 sm:px-6 lg:px-8">
         <div class="max-w-7xl mx-auto">
-            <div id="stream-live" class="hidden">
-                <div class="flex items-center justify-between mb-8">
-                    <h2 class="font-orbitron text-3xl md:text-4xl font-bold flex items-center space-x-3">
-                        <span class="w-3 h-3 bg-red-500 rounded-full live-pulse"></span>
-                        <span>LIVE BREAK</span>
-                    </h2>
+            <!-- Stream header — updates based on live status -->
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="font-orbitron text-3xl md:text-4xl font-bold flex items-center space-x-3">
+                    <span id="stream-dot" class="w-3 h-3 bg-gray-500 rounded-full"></span>
+                    <span id="stream-heading">STREAM</span>
+                </h2>
+                <div id="stream-meta" class="hidden flex items-center space-x-4">
                     <div class="flex items-center space-x-2 text-cyan-400">
-                        <i data-lucide="radio" class="w-5 h-5"></i>
-                        <span id="stream-uptime" class="font-semibold"></span>
+                        <i data-lucide="eye" class="w-4 h-4"></i>
+                        <span id="stream-viewers" class="font-semibold text-sm"></span>
+                    </div>
+                    <div class="flex items-center space-x-2 text-gray-400">
+                        <i data-lucide="radio" class="w-4 h-4"></i>
+                        <span id="stream-uptime" class="text-sm"></span>
                     </div>
                 </div>
-                <a href="https://www.twitch.tv/daddington77" target="_blank" class="glass rounded-2xl overflow-hidden border border-white/10 aspect-video relative group cursor-pointer block">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                    <img id="stream-thumbnail" src="" alt="Stream Preview" class="w-full h-full object-cover opacity-80 group-hover:opacity-60 transition-opacity">
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <div class="w-20 h-20 bg-cyan-500/90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-[0_0_30px_rgba(0,243,255,0.5)]">
-                            <i data-lucide="play" class="w-8 h-8 text-black fill-current"></i>
-                        </div>
-                    </div>
-                    <div class="absolute top-4 left-4 px-3 py-1 bg-red-600 rounded-md font-bold text-sm flex items-center space-x-2">
-                        <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-                        <span>LIVE</span>
-                    </div>
-                    <div class="absolute bottom-4 left-4 right-4 flex justify-between items-end">
-                        <div>
-                            <h3 id="stream-title" class="text-2xl font-bold mb-1"></h3>
-                            <p id="stream-game" class="text-gray-400"></p>
-                        </div>
-                        <div class="flex items-center space-x-2 text-cyan-400 bg-black/50 px-3 py-1 rounded-lg backdrop-blur-md">
-                            <i data-lucide="eye" class="w-5 h-5"></i>
-                            <span id="stream-viewers" class="font-bold"></span>
-                        </div>
-                    </div>
+            </div>
+
+            <!-- Twitch embed — always visible, shows live or offline automatically -->
+            <div class="glass rounded-2xl overflow-hidden border border-white/10" style="aspect-ratio: 16/9;">
+                <iframe
+                    src="https://player.twitch.tv/?channel=daddington77&parent=daddington77.github.io&autoplay=false"
+                    height="100%"
+                    width="100%"
+                    allowfullscreen
+                    style="display:block; border:none;">
+                </iframe>
+            </div>
+
+            <!-- Stream info bar — shown when live -->
+            <div id="stream-info-bar" class="hidden mt-4 glass rounded-xl px-5 py-3 border border-white/10 flex items-center justify-between flex-wrap gap-3">
+                <div>
+                    <p id="stream-title" class="font-bold text-white"></p>
+                    <p id="stream-game" class="text-sm text-gray-400"></p>
+                </div>
+                <a href="https://www.twitch.tv/daddington77" target="_blank"
+                   class="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-semibold transition-all">
+                    <i data-lucide="twitch" class="w-4 h-4"></i>
+                    Open on Twitch
                 </a>
             </div>
-            <div id="stream-offline">
-                <div class="flex items-center justify-between mb-8">
-                    <h2 class="font-orbitron text-3xl md:text-4xl font-bold flex items-center space-x-3">
-                        <span class="w-3 h-3 bg-gray-500 rounded-full"></span>
-                        <span>STREAM OFFLINE</span>
-                    </h2>
-                </div>
-                <div class="glass rounded-2xl overflow-hidden border border-white/10 aspect-video relative flex items-center justify-center">
-                    <div class="text-center space-y-6 p-8">
-                        <div class="w-20 h-20 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto">
-                            <i data-lucide="twitch" class="w-10 h-10 text-purple-400"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-2xl font-bold mb-2">Stream is currently offline</h3>
-                            <p class="text-gray-400 max-w-md mx-auto">Follow on Twitch to get notified when the next live break starts!</p>
-                        </div>
-                        <a href="https://www.twitch.tv/daddington77" target="_blank" class="inline-flex items-center space-x-2 px-8 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition-all">
-                            <i data-lucide="twitch" class="w-5 h-5"></i>
-                            <span>FOLLOW ON TWITCH</span>
-                        </a>
-                    </div>
-                </div>
+
+            <!-- Shown only when offline -->
+            <div id="stream-offline-msg" class="mt-4 text-center">
+                <p class="text-gray-500 text-sm">Stream is currently offline — follow on Twitch to get notified!</p>
+                <a href="https://www.twitch.tv/daddington77" target="_blank"
+                   class="inline-flex items-center gap-2 mt-3 px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-semibold transition-all">
+                    <i data-lucide="twitch" class="w-4 h-4"></i>
+                    Follow on Twitch
+                </a>
             </div>
         </div>
     </section>
@@ -645,31 +638,57 @@
             return count >= 1000 ? (count / 1000).toFixed(1).replace(/\.0$/, '') + 'K Viewers' : count.toLocaleString() + ' Viewers';
         }
         function updateTwitchStatus(data) {
-            const heroBadge = document.getElementById('hero-live-badge');
-            const heroStats = document.getElementById('hero-stats');
-            const streamLive = document.getElementById('stream-live');
-            const streamOffline = document.getElementById('stream-offline');
+            const heroBadge   = document.getElementById('hero-live-badge');
+            const heroStats   = document.getElementById('hero-stats');
             const navLiveLink = document.querySelector('a[href="#live"]');
+            const dot         = document.getElementById('stream-dot');
+            const heading     = document.getElementById('stream-heading');
+            const meta        = document.getElementById('stream-meta');
+            const infoBar     = document.getElementById('stream-info-bar');
+            const offlineMsg  = document.getElementById('stream-offline-msg');
+
             if (data.is_live) {
+                // Hero badge
                 heroBadge.className = 'inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-green-500/20 border border-green-500/50 text-green-400 font-semibold live-pulse';
                 heroBadge.innerHTML = '<span class="w-2 h-2 bg-green-500 rounded-full"></span><span class="text-sm tracking-wider">LIVE NOW - RIPPING PACKS</span>';
+
+                // Hero stats
                 heroStats.classList.remove('hidden');
                 document.getElementById('hero-viewer-count').textContent = formatViewerCount(data.viewer_count);
                 document.getElementById('hero-game-name').textContent = data.game_name || '';
-                streamLive.classList.remove('hidden');
-                streamOffline.classList.add('hidden');
+
+                // Stream section
+                dot.className = 'w-3 h-3 bg-red-500 rounded-full live-pulse';
+                heading.textContent = 'LIVE BREAK';
+                meta.classList.remove('hidden');
+                meta.style.display = 'flex';
+                infoBar.classList.remove('hidden');
+                infoBar.style.display = 'flex';
+                offlineMsg.classList.add('hidden');
+
                 document.getElementById('stream-uptime').textContent = formatUptime(data.started_at);
                 document.getElementById('stream-title').textContent = data.title || 'Live Stream';
                 document.getElementById('stream-game').textContent = data.game_name || '';
                 document.getElementById('stream-viewers').textContent = data.viewer_count.toLocaleString() + ' viewers';
-                if (data.thumbnail_url) document.getElementById('stream-thumbnail').src = data.thumbnail_url;
+
+                // Nav
                 if (navLiveLink) { navLiveLink.textContent = 'LIVE NOW'; navLiveLink.classList.add('text-green-400'); }
             } else {
+                // Hero badge
                 heroBadge.className = 'inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-gray-500/20 border border-gray-500/50 text-gray-400 font-semibold';
                 heroBadge.innerHTML = '<span class="w-2 h-2 bg-gray-500 rounded-full"></span><span class="text-sm tracking-wider">STREAM OFFLINE</span>';
+
+                // Hero stats
                 heroStats.classList.add('hidden');
-                streamLive.classList.add('hidden');
-                streamOffline.classList.remove('hidden');
+
+                // Stream section
+                dot.className = 'w-3 h-3 bg-gray-500 rounded-full';
+                heading.textContent = 'STREAM';
+                meta.classList.add('hidden');
+                infoBar.classList.add('hidden');
+                offlineMsg.classList.remove('hidden');
+
+                // Nav
                 if (navLiveLink) { navLiveLink.textContent = 'LIVE NOW'; navLiveLink.classList.remove('text-green-400'); }
             }
             if (typeof lucide !== "undefined") lucide.createIcons();
