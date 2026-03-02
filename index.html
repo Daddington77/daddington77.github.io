@@ -405,7 +405,10 @@
                         <span>TOTAL</span>
                         <span id="cartTotal" class="text-cyan-400">$0.00</span>
                     </div>
-                    <button class="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg font-bold text-lg hover:opacity-90 transition-opacity">CHECKOUT</button>
+                    <button id="checkoutBtn" onclick="startCheckout()" class="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg font-bold text-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                        <span id="checkoutBtnText">CHECKOUT</span>
+                        <span id="checkoutSpinner" class="hidden w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -624,6 +627,50 @@
                 updateTwitchStatus(await resp.json());
             } catch {
                 updateTwitchStatus({ is_live: false });
+            }
+        }
+
+        // ─── Stripe Checkout ─────────────────────────────────────────────────────
+        const WORKER_URL = 'https://dadcheckout.juggaloateyourdog.workers.dev';
+
+        async function startCheckout() {
+            if (cart.length === 0) return;
+
+            const btn = document.getElementById('checkoutBtn');
+            const btnText = document.getElementById('checkoutBtnText');
+            const spinner = document.getElementById('checkoutSpinner');
+
+            // Loading state
+            btn.disabled = true;
+            btnText.textContent = 'REDIRECTING...';
+            spinner.classList.remove('hidden');
+
+            try {
+                const resp = await fetch(`${WORKER_URL}/create-checkout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items: cart }),
+                });
+
+                const data = await resp.json();
+
+                if (!resp.ok || !data.url) {
+                    throw new Error(data.error || 'Checkout failed');
+                }
+
+                // Redirect to Stripe checkout page
+                window.location.href = data.url;
+
+            } catch (err) {
+                console.error('Checkout error:', err);
+                btnText.textContent = 'ERROR — TRY AGAIN';
+                spinner.classList.add('hidden');
+                btn.disabled = false;
+                btn.classList.add('bg-red-500');
+                setTimeout(() => {
+                    btnText.textContent = 'CHECKOUT';
+                    btn.classList.remove('bg-red-500');
+                }, 3000);
             }
         }
 
