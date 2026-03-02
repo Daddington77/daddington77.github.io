@@ -765,18 +765,15 @@
 
             } catch (err) {
                 console.error('Checkout error:', err);
-                btnText.textContent = 'ERROR — TRY AGAIN';
+                const errMsg = err.message || 'Something went wrong';
+                btnText.textContent = '✕ ' + errMsg;
                 spinner.classList.add('hidden');
                 btn.disabled = false;
-                btn.classList.add('bg-red-500');
+                btn.style.background = 'linear-gradient(to right, #ef4444, #dc2626)';
                 setTimeout(() => {
                     btnText.textContent = 'CHECKOUT';
-                    btn.classList.remove('bg-red-500');
-                }, 3000);
-            } finally {
-                btnText.textContent = 'CHECKOUT';
-                spinner.classList.add('hidden');
-                btn.disabled = false;
+                    btn.style.background = '';
+                }, 4000);
             }
         }
 
