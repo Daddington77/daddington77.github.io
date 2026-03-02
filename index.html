@@ -1182,6 +1182,19 @@
 
                 if (!resp.ok) throw new Error('Discord error ' + resp.status);
 
+                // If Twitch username provided, add to Firebot alert queue
+                if (twitch) {
+                    try {
+                        await fetch(`${WORKER_URL}/queue-order`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ username: twitch }),
+                        });
+                    } catch (qErr) {
+                        console.warn('Queue order failed (non-fatal):', qErr);
+                    }
+                }
+
                 // Success — close modal
                 closeSuccessModal();
 
