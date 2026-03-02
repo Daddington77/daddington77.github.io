@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daddington77 | Live Trading Card Breaks</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://js.stripe.com/v3/"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
@@ -470,7 +469,7 @@
     </div>
 
     <script>
-        lucide.createIcons();
+        if (typeof lucide !== "undefined") lucide.createIcons();
 
         // ─── State ────────────────────────────────────────────────────────────────
         let allListings = [];
@@ -540,7 +539,7 @@
                     </div>
                 </div>
             `).join('');
-            lucide.createIcons();
+            if (typeof lucide !== "undefined") lucide.createIcons();
         }
 
         // ─── Cart ─────────────────────────────────────────────────────────────────
@@ -553,11 +552,11 @@
             const originalHTML = btn.innerHTML;
             btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> ADDED';
             btn.classList.add('bg-green-500', 'text-black');
-            lucide.createIcons();
+            if (typeof lucide !== "undefined") lucide.createIcons();
             setTimeout(() => {
                 btn.innerHTML = originalHTML;
                 btn.classList.remove('bg-green-500', 'text-black');
-                lucide.createIcons();
+                if (typeof lucide !== "undefined") lucide.createIcons();
             }, 1500);
         }
 
@@ -591,7 +590,7 @@
                     </div>
                 `).join('');
                 total.textContent = '$' + cart.reduce((sum, i) => sum + i.price, 0).toLocaleString();
-                lucide.createIcons();
+                if (typeof lucide !== "undefined") lucide.createIcons();
             }
         }
 
@@ -673,7 +672,7 @@
                 streamOffline.classList.remove('hidden');
                 if (navLiveLink) { navLiveLink.textContent = 'LIVE NOW'; navLiveLink.classList.remove('text-green-400'); }
             }
-            lucide.createIcons();
+            if (typeof lucide !== "undefined") lucide.createIcons();
         }
         async function checkTwitchStatus() {
             try {
@@ -845,5 +844,6 @@
         checkTwitchStatus();
         setInterval(checkTwitchStatus, 5 * 60 * 1000);
     </script>
+    <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js" onload="lucide.createIcons()"></script>
 </body>
 </html>
