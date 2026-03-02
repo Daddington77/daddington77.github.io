@@ -698,14 +698,13 @@
                         <p class="text-xs text-gray-500 uppercase mb-3">${card.game}</p>
                         <div class="flex justify-between items-center">
                             <span class="text-cyan-400 font-orbitron font-bold">$${card.price.toLocaleString()}</span>
-                            <button onclick="addToCart(${card.id})" class="p-2 rounded-lg bg-white/5 hover:bg-cyan-500 hover:text-black transition-all">
-                                <i data-lucide="plus" class="w-5 h-5"></i>
+                            <button onclick="addToCart(${card.id})" class="w-9 h-9 rounded-lg bg-white/5 hover:bg-cyan-500 hover:text-black transition-all flex items-center justify-center text-xl font-bold leading-none">
+                                +
                             </button>
                         </div>
                     </div>
                 </div>
             `).join('');
-            if (typeof lucide !== "undefined") lucide.createIcons();
         }
 
         // ─── Cart ───────────────────────────────────────────────────────────────────
@@ -716,13 +715,11 @@
             updateCart();
             const btn = event.target.closest('button');
             const originalHTML = btn.innerHTML;
-            btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> ADDED';
+            btn.innerHTML = '✓';
             btn.classList.add('bg-green-500', 'text-black');
-            if (typeof lucide !== "undefined") lucide.createIcons();
             setTimeout(() => {
                 btn.innerHTML = originalHTML;
                 btn.classList.remove('bg-green-500', 'text-black');
-                if (typeof lucide !== "undefined") lucide.createIcons();
             }, 1500);
         }
 
@@ -903,13 +900,11 @@
                 `;
                 container.appendChild(piece);
             }
-            // Clean up after animations finish
             setTimeout(() => { container.innerHTML = ''; }, 3000);
         }
 
         function openSuccessModal(orderItems) {
-            lastOrderSnapshot = orderItems; // store for Discord submission
-            // Populate order summary
+            lastOrderSnapshot = orderItems;
             const summary = document.getElementById('successOrderSummary');
             summary.innerHTML = orderItems.map(item => `
                 <div class="flex items-center gap-3 py-1.5">
@@ -923,7 +918,6 @@
             const total = orderItems.reduce((s, i) => s + i.price, 0);
             document.getElementById('successTotal').textContent = '$' + total.toLocaleString();
 
-            // Reset form state
             ['fieldTwitch','fieldName','fieldAddress','fieldCity','fieldState','fieldZip'].forEach(id => {
                 document.getElementById(id).value = '';
             });
@@ -939,7 +933,6 @@
 
             if (typeof lucide !== "undefined") lucide.createIcons();
 
-            // Spawn confetti after card pops in
             setTimeout(spawnConfetti, 300);
         }
 
@@ -1029,7 +1022,6 @@
                 const total = cart.reduce((s, i) => s + i.price, 0);
                 document.getElementById('paymentTotal').textContent = '$' + total.toLocaleString();
 
-                // Snapshot cart before opening modal (used for success screen)
                 lastOrderItems = [...cart];
 
                 openPaymentModal();
@@ -1040,10 +1032,8 @@
                 btnText.textContent = '✕ ' + errMsg;
                 btn.style.background = 'linear-gradient(to right, #ef4444, #dc2626)';
                 setTimeout(resetCheckoutBtn, 4000);
-                return; // early exit so finally doesn't immediately reset
+                return;
             } finally {
-                // Always re-enable button + hide spinner (on success path too)
-                // Small delay so the user sees "LOADING..." transition to modal
                 setTimeout(resetCheckoutBtn, 400);
             }
         }
@@ -1070,30 +1060,25 @@
             });
 
             if (error) {
-                // ── Payment failed ──
                 msg.textContent = error.message;
                 msg.classList.remove('hidden');
                 btn.disabled = false;
                 btnText.textContent = 'PAY NOW';
                 spinner.classList.add('hidden');
             } else {
-                // ── Payment succeeded (no redirect needed) ──
                 closePaymentModal();
 
-                // Capture order snapshot, clear the live cart
                 const orderSnapshot = [...lastOrderItems];
                 cart = [];
                 lastOrderItems = [];
                 updateCart();
 
-                // Show success modal
                 openSuccessModal(orderSnapshot);
             }
         }
 
         function openPaymentModal() {
             document.getElementById('paymentModal').classList.remove('hidden');
-            // Close cart sidebar
             document.getElementById('cartContent').classList.add('translate-x-full');
             setTimeout(() => document.getElementById('cartSidebar').classList.add('hidden'), 300);
         }
@@ -1105,7 +1090,6 @@
                 paymentElement = null;
                 elements = null;
             }
-            // Reset Stripe mount point
             document.getElementById('payment-element').innerHTML =
                 '<div id="stripeLoading" class="flex flex-col items-center justify-center py-12 text-gray-400 gap-3">' +
                 '<div class="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>' +
@@ -1132,7 +1116,6 @@
             const zip     = document.getElementById('fieldZip').value.trim();
             const errEl   = document.getElementById('formError');
 
-            // Validate required fields
             if (!name || !address || !city || !state || !zip) {
                 errEl.textContent = 'Please fill in all required shipping fields.';
                 errEl.classList.remove('hidden');
@@ -1147,11 +1130,9 @@
             btnText.textContent = 'SENDING...';
             spinner.classList.remove('hidden');
 
-            // Build order items string
             const itemLines = lastOrderSnapshot.map(i => `• ${i.name} — $${i.price.toLocaleString()}`).join('\n');
             const total = lastOrderSnapshot.reduce((s, i) => s + i.price, 0);
 
-            // Build Discord embed
             const fields = [
                 { name: '📦 Items', value: itemLines || 'N/A', inline: false },
                 { name: '💰 Total', value: `$${total.toLocaleString()}`, inline: true },
@@ -1182,7 +1163,6 @@
 
                 if (!resp.ok) throw new Error('Discord error ' + resp.status);
 
-                // If Twitch username provided, add to Firebot alert queue
                 if (twitch) {
                     try {
                         const itemNames = lastOrderSnapshot.map(i => i.name).join(', ');
@@ -1196,7 +1176,6 @@
                     }
                 }
 
-                // Success — close modal
                 closeSuccessModal();
 
             } catch (err) {
