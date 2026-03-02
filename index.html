@@ -402,12 +402,12 @@
 
                 <!-- Stripe Elements mount point -->
                 <div class="px-6 pb-4">
-                    <div id="payment-element" class="min-h-[200px]">
-                        <!-- Loading state -->
+                    <div class="min-h-[200px] relative">
                         <div id="stripeLoading" class="flex flex-col items-center justify-center py-12 text-gray-400 gap-3">
                             <div class="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
                             <span class="text-sm">Loading payment form...</span>
                         </div>
+                        <div id="payment-element"></div>
                     </div>
                     <div id="payment-message" class="hidden mt-3 text-sm text-red-400 text-center"></div>
                 </div>
@@ -764,7 +764,7 @@
                     },
                 });
 
-                // Remove loading spinner from mount point
+                // Hide loading spinner once element mounts
                 document.getElementById('stripeLoading').style.display = 'none';
 
                 paymentElement = elements.create('payment', {
@@ -853,14 +853,14 @@
 
         function closePaymentModal() {
             document.getElementById('paymentModal').classList.add('hidden');
-            // Reset payment element
             if (paymentElement) {
                 paymentElement.unmount();
                 paymentElement = null;
                 elements = null;
             }
+            // Reset DOM back to loading state
             document.getElementById('stripeLoading').style.display = 'flex';
-            document.getElementById('payment-element').innerHTML = '<div id="stripeLoading" class="flex flex-col items-center justify-center py-12 text-gray-400 gap-3"><div class="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div><span class="text-sm">Loading payment form...</span></div>';
+            document.getElementById('payment-element').innerHTML = '';
             document.getElementById('payment-message').classList.add('hidden');
             const payBtn = document.getElementById('payNowBtn');
             payBtn.disabled = true;
