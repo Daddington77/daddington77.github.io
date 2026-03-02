@@ -521,10 +521,37 @@
                     </div>
                 </div>
 
-                <!-- Okay button -->
-                <button onclick="closeSuccessModal()"
-                        class="okay-btn w-full py-4 rounded-xl font-orbitron font-bold text-base tracking-wider text-black">
-                    AWESOME, LET'S GO! ⚡
+                <!-- Shipping + Twitch form -->
+                <div class="w-full space-y-3 mb-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest font-semibold mb-3 text-left">Your Details</p>
+                    <input id="fieldTwitch" type="text" placeholder="Twitch Username (optional)"
+                           class="w-full px-4 py-2.5 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
+                           style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12);">
+                    <input id="fieldName" type="text" placeholder="Full Name *"
+                           class="w-full px-4 py-2.5 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
+                           style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12);">
+                    <input id="fieldAddress" type="text" placeholder="Street Address *"
+                           class="w-full px-4 py-2.5 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
+                           style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12);">
+                    <div class="grid grid-cols-2 gap-3">
+                        <input id="fieldCity" type="text" placeholder="City *"
+                               class="w-full px-4 py-2.5 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
+                               style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12);">
+                        <input id="fieldState" type="text" placeholder="State *"
+                               class="w-full px-4 py-2.5 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
+                               style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12);">
+                    </div>
+                    <input id="fieldZip" type="text" placeholder="ZIP Code *"
+                           class="w-full px-4 py-2.5 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
+                           style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12);">
+                    <div id="formError" class="hidden text-red-400 text-xs text-center pt-1"></div>
+                </div>
+
+                <!-- Submit button -->
+                <button id="submitDetailsBtn" onclick="submitOrderDetails()"
+                        class="okay-btn w-full py-4 rounded-xl font-orbitron font-bold text-base tracking-wider text-black flex items-center justify-center gap-2">
+                    <span id="submitDetailsText">SUBMIT & LET'S GO! ⚡</span>
+                    <span id="submitDetailsSpinner" class="hidden w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
                 </button>
 
                 <!-- Twitch link -->
@@ -621,6 +648,7 @@
         let activeFilter = 'all';
         let cart = [];
         let lastOrderItems = [];   // snapshot of cart at payment time for success modal
+        let lastOrderSnapshot = []; // copy used by Discord submission
 
         // ─── Load listings ──────────────────────────────────────────────────────────
         async function loadListings() {
@@ -880,6 +908,7 @@
         }
 
         function openSuccessModal(orderItems) {
+            lastOrderSnapshot = orderItems; // store for Discord submission
             // Populate order summary
             const summary = document.getElementById('successOrderSummary');
             summary.innerHTML = orderItems.map(item => `
@@ -893,6 +922,16 @@
 
             const total = orderItems.reduce((s, i) => s + i.price, 0);
             document.getElementById('successTotal').textContent = '$' + total.toLocaleString();
+
+            // Reset form state
+            ['fieldTwitch','fieldName','fieldAddress','fieldCity','fieldState','fieldZip'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            document.getElementById('formError').classList.add('hidden');
+            const submitBtn = document.getElementById('submitDetailsBtn');
+            submitBtn.disabled = false;
+            document.getElementById('submitDetailsText').textContent = "SUBMIT & LET'S GO! ⚡";
+            document.getElementById('submitDetailsSpinner').classList.add('hidden');
 
             const modal = document.getElementById('successModal');
             modal.classList.add('show');
@@ -1080,6 +1119,81 @@
         }
 
         document.getElementById('paymentOverlay').addEventListener('click', closePaymentModal);
+
+        // ─── Discord Webhook ────────────────────────────────────────────────────────
+        const DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/1477944422376407133/ggs74lfpXT7L2Ls_3VyZ809ocEq6nKWvdkAEAON_apsFET0H7pYX1Vdrtt40SkO_lvAJ';
+
+        async function submitOrderDetails() {
+            const twitch  = document.getElementById('fieldTwitch').value.trim();
+            const name    = document.getElementById('fieldName').value.trim();
+            const address = document.getElementById('fieldAddress').value.trim();
+            const city    = document.getElementById('fieldCity').value.trim();
+            const state   = document.getElementById('fieldState').value.trim();
+            const zip     = document.getElementById('fieldZip').value.trim();
+            const errEl   = document.getElementById('formError');
+
+            // Validate required fields
+            if (!name || !address || !city || !state || !zip) {
+                errEl.textContent = 'Please fill in all required shipping fields.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+            errEl.classList.add('hidden');
+
+            const btn     = document.getElementById('submitDetailsBtn');
+            const btnText = document.getElementById('submitDetailsText');
+            const spinner = document.getElementById('submitDetailsSpinner');
+            btn.disabled = true;
+            btnText.textContent = 'SENDING...';
+            spinner.classList.remove('hidden');
+
+            // Build order items string
+            const itemLines = lastOrderSnapshot.map(i => `• ${i.name} — $${i.price.toLocaleString()}`).join('\n');
+            const total = lastOrderSnapshot.reduce((s, i) => s + i.price, 0);
+
+            // Build Discord embed
+            const fields = [
+                { name: '📦 Items', value: itemLines || 'N/A', inline: false },
+                { name: '💰 Total', value: `$${total.toLocaleString()}`, inline: true },
+                { name: '📅 Time', value: new Date().toLocaleString(), inline: true },
+                { name: '📛 Name', value: name, inline: false },
+                { name: '🏠 Address', value: `${address}\n${city}, ${state} ${zip}`, inline: false },
+            ];
+
+            if (twitch) {
+                fields.unshift({ name: '🎮 Twitch', value: twitch, inline: true });
+            }
+
+            const payload = {
+                embeds: [{
+                    title: twitch ? `New Break Order — ${twitch}` : 'New Break Order',
+                    color: 0x00f3ff,
+                    fields,
+                    footer: { text: 'Daddington77 Break Store' },
+                }]
+            };
+
+            try {
+                const resp = await fetch(DISCORD_WEBHOOK, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                if (!resp.ok) throw new Error('Discord error ' + resp.status);
+
+                // Success — close modal
+                closeSuccessModal();
+
+            } catch (err) {
+                console.error('Discord webhook error:', err);
+                errEl.textContent = 'Failed to send — please screenshot this and DM us on Discord.';
+                errEl.classList.remove('hidden');
+                btn.disabled = false;
+                btnText.textContent = 'SUBMIT & LET\'S GO! ⚡';
+                spinner.classList.add('hidden');
+            }
+        }
 
         // ─── Init ───────────────────────────────────────────────────────────────────
         loadListings();
