@@ -1185,10 +1185,11 @@
                 // If Twitch username provided, add to Firebot alert queue
                 if (twitch) {
                     try {
+                        const itemNames = lastOrderSnapshot.map(i => i.name).join(', ');
                         await fetch(`${WORKER_URL}/queue-order`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ username: twitch }),
+                            body: JSON.stringify({ username: twitch, items: itemNames }),
                         });
                     } catch (qErr) {
                         console.warn('Queue order failed (non-fatal):', qErr);
