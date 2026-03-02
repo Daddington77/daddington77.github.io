@@ -15,122 +15,41 @@
             --neon-pink: #ff006e;
             --dark-bg: #0a0a0f;
         }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--dark-bg);
-            color: #fff;
-            overflow-x: hidden;
-        }
-        
-        .font-orbitron {
-            font-family: 'Orbitron', sans-serif;
-        }
-        
-        /* Animated gradient background */
-        .gradient-bg {
-            background: linear-gradient(-45deg, #0f0f1a, #1a0b2e, #0d1b2a, #1a0b2e);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-        }
-        
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        
-        /* Neon glow effects */
-        .neon-text-cyan {
-            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5), 0 0 20px rgba(0, 243, 255, 0.3);
-        }
-        
-        .neon-text-purple {
-            text-shadow: 0 0 10px rgba(188, 19, 254, 0.5), 0 0 20px rgba(188, 19, 254, 0.3);
-        }
-        
-        .neon-border {
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3), inset 0 0 20px rgba(0, 243, 255, 0.1);
-        }
-        
-        /* Glassmorphism */
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        /* Live pulse animation */
-        .live-pulse {
-            animation: pulse-red 2s infinite;
-        }
-        
-        @keyframes pulse-red {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.1); }
-        }
-        
-        /* Card hover effect */
-        .card-hover {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .card-hover:hover {
-            transform: translateY(-10px) rotateX(5deg);
-            box-shadow: 0 20px 40px rgba(0, 243, 255, 0.2);
-        }
-        
-        /* Glitch effect on hover for title */
-        .glitch-hover:hover {
-            animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
-        }
-        
-        @keyframes glitch {
-            0% { transform: translate(0) }
-            20% { transform: translate(-2px, 2px) }
-            40% { transform: translate(-2px, -2px) }
-            60% { transform: translate(2px, 2px) }
-            80% { transform: translate(2px, -2px) }
-            100% { transform: translate(0) }
-        }
-        
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #0a0a0f;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #00f3ff;
-            border-radius: 4px;
-        }
-        
-        /* Grid background pattern */
-        .grid-pattern {
-            background-image: radial-gradient(circle at 1px 1px, rgba(0, 243, 255, 0.15) 1px, transparent 0);
-            background-size: 40px 40px;
-        }
+        body { font-family: 'Inter', sans-serif; background: var(--dark-bg); color: #fff; overflow-x: hidden; }
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+        .gradient-bg { background: linear-gradient(-45deg, #0f0f1a, #1a0b2e, #0d1b2a, #1a0b2e); background-size: 400% 400%; animation: gradientShift 15s ease infinite; }
+        @keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .neon-border { box-shadow: 0 0 20px rgba(0, 243, 255, 0.3), inset 0 0 20px rgba(0, 243, 255, 0.1); }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .live-pulse { animation: pulse-red 2s infinite; }
+        @keyframes pulse-red { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.1); } }
+        .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover { transform: translateY(-10px) rotateX(5deg); box-shadow: 0 20px 40px rgba(0, 243, 255, 0.2); }
+        .glitch-hover:hover { animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite; }
+        @keyframes glitch { 0% { transform: translate(0) } 20% { transform: translate(-2px, 2px) } 40% { transform: translate(-2px, -2px) } 60% { transform: translate(2px, 2px) } 80% { transform: translate(2px, -2px) } 100% { transform: translate(0) } }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a0f; }
+        ::-webkit-scrollbar-thumb { background: #00f3ff; border-radius: 4px; }
+        .grid-pattern { background-image: radial-gradient(circle at 1px 1px, rgba(0, 243, 255, 0.15) 1px, transparent 0); background-size: 40px 40px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .animate-spin { animation: spin 1s linear infinite; }
     </style>
 </head>
 <body class="gradient-bg min-h-screen">
+
     <!-- Navigation -->
     <nav class="fixed w-full z-50 glass border-b border-white/10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-20">
-                <div class="flex items-center space-x-2 logo-container">
+                <div class="flex items-center space-x-2">
                     <img src="https://static-cdn.jtvnw.net/jtv_user_pictures/681047d0-0d03-48bd-8914-08b3787b00ac-profile_image-300x300.jpeg" alt="Daddington77" class="w-8 h-8 rounded-full object-cover">
-                    <span class="font-orbitron text-2xl font-bold bg-gradient-to-r from-green-400 to-purple-500 bg-clip-text text-transparent glitch-hover cursor-pointer">
-                        DADDINGTON77
-                    </span>
+                    <span class="font-orbitron text-2xl font-bold bg-gradient-to-r from-green-400 to-purple-500 bg-clip-text text-transparent glitch-hover cursor-pointer">DADDINGTON77</span>
                 </div>
-                
                 <div class="hidden md:flex items-center space-x-8">
                     <a href="#live" class="text-gray-300 hover:text-green-400 transition-colors font-semibold">LIVE NOW</a>
                     <a href="#shop" class="text-gray-300 hover:text-cyan-400 transition-colors font-semibold">BUY PACKS</a>
                     <a href="#about" class="text-gray-300 hover:text-purple-400 transition-colors font-semibold">ABOUT</a>
                 </div>
-                
                 <div class="flex items-center space-x-4">
                     <button class="relative p-2 text-gray-300 hover:text-green-400 transition-colors" id="cartBtn">
                         <i data-lucide="shopping-cart" class="w-6 h-6"></i>
@@ -146,8 +65,6 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Mobile Menu -->
         <div id="mobileMenu" class="hidden md:hidden glass border-t border-white/10">
             <div class="px-4 pt-2 pb-6 space-y-2">
                 <a href="#live" class="block px-3 py-2 text-gray-300 hover:text-green-400">LIVE NOW</a>
@@ -157,7 +74,7 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
+    <!-- Hero -->
     <section class="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div class="absolute inset-0 grid-pattern opacity-30"></div>
         <div class="max-w-7xl mx-auto relative z-10">
@@ -167,16 +84,11 @@
                         <span class="w-2 h-2 bg-gray-500 rounded-full"></span>
                         <span class="text-sm tracking-wider">CHECKING STREAM STATUS...</span>
                     </div>
-                    
                     <h1 class="font-orbitron text-5xl md:text-7xl font-black leading-tight">
                         BUY <span class="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cyan-500">PACKS</span><br>
                         WATCH <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">LIVE</span>
                     </h1>
-                    
-                    <p class="text-xl text-gray-400 max-w-lg">
-                        Buy packs from the store and watch me rip them open live on Twitch! You keep every card I pull—no gambling risk, all the rewards. Pokémon, Magic, and Yu-Gi-Oh!
-                    </p>
-                    
+                    <p class="text-xl text-gray-400 max-w-lg">Buy packs from the store and watch me rip them open live on Twitch! You keep every card I pull—no gambling risk, all the rewards. Pokémon, Magic, and Yu-Gi-Oh!</p>
                     <div class="flex flex-wrap gap-4">
                         <a href="#shop" class="group relative px-8 py-4 bg-gradient-to-r from-green-500 to-cyan-600 rounded-lg font-bold text-lg overflow-hidden transition-all hover:scale-105">
                             <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform"></div>
@@ -190,7 +102,6 @@
                             <span>WATCH ON TWITCH</span>
                         </a>
                     </div>
-                    
                     <div id="hero-stats" class="flex items-center space-x-6 text-gray-400 hidden">
                         <div class="flex items-center space-x-2">
                             <i data-lucide="users" class="w-5 h-5 text-green-400"></i>
@@ -202,7 +113,6 @@
                         </div>
                     </div>
                 </div>
-                
                 <div class="relative">
                     <div class="absolute inset-0 bg-gradient-to-r from-green-500 to-purple-500 rounded-3xl blur-3xl opacity-20 animate-pulse"></div>
                     <div class="relative glass rounded-3xl p-4 neon-border transform hover:rotate-1 transition-transform duration-500">
@@ -229,30 +139,17 @@
     <section class="border-y border-white/10 bg-black/20 backdrop-blur-sm">
         <div class="max-w-7xl mx-auto px-4 py-6">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-                <div>
-                    <p class="text-3xl font-orbitron font-bold text-cyan-400">15K+</p>
-                    <p class="text-sm text-gray-400 mt-1">Community Members</p>
-                </div>
-                <div>
-                    <p class="text-3xl font-orbitron font-bold text-purple-400">50K+</p>
-                    <p class="text-sm text-gray-400 mt-1">Cards Ripped</p>
-                </div>
-                <div>
-                    <p class="text-3xl font-orbitron font-bold text-pink-400">$2M+</p>
-                    <p class="text-sm text-gray-400 mt-1">Cards Sold</p>
-                </div>
-                <div>
-                    <p class="text-3xl font-orbitron font-bold text-green-400">99%</p>
-                    <p class="text-sm text-gray-400 mt-1">Positive Vibes</p>
-                </div>
+                <div><p class="text-3xl font-orbitron font-bold text-cyan-400">15K+</p><p class="text-sm text-gray-400 mt-1">Community Members</p></div>
+                <div><p class="text-3xl font-orbitron font-bold text-purple-400">50K+</p><p class="text-sm text-gray-400 mt-1">Cards Ripped</p></div>
+                <div><p class="text-3xl font-orbitron font-bold text-pink-400">$2M+</p><p class="text-sm text-gray-400 mt-1">Cards Sold</p></div>
+                <div><p class="text-3xl font-orbitron font-bold text-green-400">99%</p><p class="text-sm text-gray-400 mt-1">Positive Vibes</p></div>
             </div>
         </div>
     </section>
 
-    <!-- Live Stream Section -->
+    <!-- Live Stream -->
     <section id="live" class="py-20 px-4 sm:px-6 lg:px-8">
         <div class="max-w-7xl mx-auto">
-            <!-- Live state (shown when stream is live) -->
             <div id="stream-live" class="hidden">
                 <div class="flex items-center justify-between mb-8">
                     <h2 class="font-orbitron text-3xl md:text-4xl font-bold flex items-center space-x-3">
@@ -264,7 +161,6 @@
                         <span id="stream-uptime" class="font-semibold"></span>
                     </div>
                 </div>
-
                 <a href="https://www.twitch.tv/daddington77" target="_blank" class="glass rounded-2xl overflow-hidden border border-white/10 aspect-video relative group cursor-pointer block">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                     <img id="stream-thumbnail" src="" alt="Stream Preview" class="w-full h-full object-cover opacity-80 group-hover:opacity-60 transition-opacity">
@@ -289,8 +185,6 @@
                     </div>
                 </a>
             </div>
-
-            <!-- Offline state (shown when stream is offline) -->
             <div id="stream-offline">
                 <div class="flex items-center justify-between mb-8">
                     <h2 class="font-orbitron text-3xl md:text-4xl font-bold flex items-center space-x-3">
@@ -298,7 +192,6 @@
                         <span>STREAM OFFLINE</span>
                     </h2>
                 </div>
-
                 <div class="glass rounded-2xl overflow-hidden border border-white/10 aspect-video relative flex items-center justify-center">
                     <div class="text-center space-y-6 p-8">
                         <div class="w-20 h-20 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto">
@@ -322,14 +215,9 @@
     <section class="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-transparent to-purple-900/20">
         <div class="max-w-7xl mx-auto">
             <div class="text-center mb-16">
-                <h2 class="font-orbitron text-4xl md:text-5xl font-bold mb-4">
-                    HOW IT <span class="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cyan-500">WORKS</span>
-                </h2>
-                <p class="text-gray-400 text-lg max-w-2xl mx-auto">
-                    Buy packs from the site, watch them get opened live on Twitch, and keep every card pulled. It's that simple.
-                </p>
+                <h2 class="font-orbitron text-4xl md:text-5xl font-bold mb-4">HOW IT <span class="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cyan-500">WORKS</span></h2>
+                <p class="text-gray-400 text-lg max-w-2xl mx-auto">Buy packs from the site, watch them get opened live on Twitch, and keep every card pulled. It's that simple.</p>
             </div>
-            
             <div class="grid md:grid-cols-3 gap-8">
                 <div class="glass rounded-2xl p-8 border border-white/10 text-center group hover:border-green-500/50 transition-all">
                     <div class="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-500/20 group-hover:scale-110 transition-transform">
@@ -338,7 +226,6 @@
                     <h3 class="text-xl font-bold mb-3">1. Buy Packs</h3>
                     <p class="text-gray-400">Purchase booster packs from the store. Mix and match different sets to fill your break slot.</p>
                 </div>
-                
                 <div class="glass rounded-2xl p-8 border border-white/10 text-center group hover:border-purple-500/50 transition-all">
                     <div class="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-purple-500/20 group-hover:scale-110 transition-transform">
                         <i data-lucide="video" class="w-8 h-8 text-white"></i>
@@ -346,7 +233,6 @@
                     <h3 class="text-xl font-bold mb-3">2. Watch Live</h3>
                     <p class="text-gray-400">Tune into the Twitch stream and watch your packs get ripped open in real-time with live chat.</p>
                 </div>
-                
                 <div class="glass rounded-2xl p-8 border border-white/10 text-center group hover:border-cyan-500/50 transition-all">
                     <div class="w-16 h-16 bg-gradient-to-br from-cyan-400 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-cyan-500/20 group-hover:scale-110 transition-transform">
                         <i data-lucide="package" class="w-8 h-8 text-white"></i>
@@ -355,7 +241,6 @@
                     <p class="text-gray-400">Every single card pulled from your packs is yours. Top loaded and shipped with care.</p>
                 </div>
             </div>
-            
             <div class="text-center mt-12">
                 <a href="https://www.twitch.tv/daddington77" target="_blank" class="inline-flex items-center space-x-2 px-8 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition-all">
                     <i data-lucide="twitch" class="w-5 h-5"></i>
@@ -365,7 +250,7 @@
         </div>
     </section>
 
-    <!-- Shop Section -->
+    <!-- Shop -->
     <section id="shop" class="py-20 px-4 sm:px-6 lg:px-8">
         <div class="max-w-7xl mx-auto">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
@@ -373,7 +258,6 @@
                     <h2 class="font-orbitron text-4xl font-bold mb-2">BREAK PACKS</h2>
                     <p class="text-gray-400">Buy packs for live opening • You keep all cards pulled • Watch on Twitch</p>
                 </div>
-                
                 <div class="flex flex-wrap gap-3">
                     <button class="filter-btn active px-4 py-2 rounded-lg bg-green-500 text-black font-semibold transition-all" data-filter="all">ALL</button>
                     <button class="filter-btn px-4 py-2 rounded-lg glass hover:bg-white/10 transition-all" data-filter="pokemon">POKÉMON</button>
@@ -381,14 +265,21 @@
                     <button class="filter-btn px-4 py-2 rounded-lg glass hover:bg-white/10 transition-all" data-filter="yugioh">YU-GI-OH</button>
                 </div>
             </div>
-            
-            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6" id="shopGrid">
-                <!-- Shop cards injected by JS -->
+
+            <div id="shopLoading" class="text-center py-20 text-gray-400">
+                <i data-lucide="loader" class="w-8 h-8 mx-auto mb-4 animate-spin"></i>
+                <p>Loading listings...</p>
             </div>
+            <div id="shopEmpty" class="hidden text-center py-20 text-gray-400">
+                <i data-lucide="package-x" class="w-12 h-12 mx-auto mb-4 opacity-40"></i>
+                <p class="text-xl font-semibold mb-2">No listings found</p>
+                <p class="text-sm">Check back soon or follow on Twitch for updates.</p>
+            </div>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 hidden" id="shopGrid"></div>
         </div>
     </section>
 
-    <!-- About Section -->
+    <!-- About -->
     <section id="about" class="py-20 px-4 sm:px-6 lg:px-8 border-t border-white/10">
         <div class="max-w-7xl mx-auto">
             <div class="grid lg:grid-cols-2 gap-12 items-center">
@@ -409,16 +300,10 @@
                         </div>
                     </div>
                 </div>
-                
                 <div class="space-y-6">
                     <h2 class="font-orbitron text-4xl font-bold">WHO'S BEHIND THE <span class="text-green-400">RIPS?</span></h2>
-                    <p class="text-gray-300 text-lg leading-relaxed">
-                        Hey, I'm Daddington! I run live TCG breaks on Twitch where you buy the packs and I open them for you. No gambling risk on your end—you buy the packs, you keep every single card I pull, whether it's a $5 common or a $500 secret rare.
-                    </p>
-                    <p class="text-gray-300 text-lg leading-relaxed">
-                        It's all about the community and the thrill of the rip. Join us live, hang in chat, and watch the cardboard magic happen in real-time.
-                    </p>
-                    
+                    <p class="text-gray-300 text-lg leading-relaxed">Hey, I'm Daddington! I run live TCG breaks on Twitch where you buy the packs and I open them for you. No gambling risk on your end—you buy the packs, you keep every single card I pull, whether it's a $5 common or a $500 secret rare.</p>
+                    <p class="text-gray-300 text-lg leading-relaxed">It's all about the community and the thrill of the rip. Join us live, hang in chat, and watch the cardboard magic happen in real-time.</p>
                     <div class="grid grid-cols-3 gap-4 pt-4">
                         <a href="https://www.twitch.tv/daddington77" target="_blank" class="glass p-4 rounded-xl hover:bg-purple-500/20 transition-all group text-center border border-purple-500/30 hover:border-purple-500">
                             <i data-lucide="twitch" class="w-8 h-8 text-purple-400 mx-auto mb-2 group-hover:scale-110 transition-transform"></i>
@@ -444,15 +329,11 @@
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500"></div>
             <div class="absolute -top-20 -right-20 w-40 h-40 bg-cyan-500/20 rounded-full blur-3xl"></div>
             <div class="absolute -bottom-20 -left-20 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl"></div>
-            
             <h2 class="font-orbitron text-3xl md:text-4xl font-bold mb-4">DON'T MISS THE <span class="text-cyan-400">HITS</span></h2>
             <p class="text-gray-400 mb-8">Get notified when we go live and when rare cards drop. No spam, just rips.</p>
-            
             <form class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto" onsubmit="event.preventDefault(); alert('Welcome to the squad! ⚡');">
                 <input type="email" placeholder="Enter your email" class="flex-1 px-6 py-3 rounded-lg bg-black/30 border border-white/20 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors">
-                <button type="submit" class="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg font-bold hover:opacity-90 transition-opacity whitespace-nowrap">
-                    SUBSCRIBE
-                </button>
+                <button type="submit" class="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg font-bold hover:opacity-90 transition-opacity whitespace-nowrap">SUBSCRIBE</button>
             </form>
         </div>
     </section>
@@ -466,9 +347,7 @@
                         <img src="https://static-cdn.jtvnw.net/jtv_user_pictures/681047d0-0d03-48bd-8914-08b3787b00ac-profile_image-300x300.jpeg" alt="Daddington77" class="w-6 h-6 rounded-full object-cover">
                         <span class="font-orbitron text-xl font-bold">DADDINGTON77</span>
                     </div>
-                    <p class="text-gray-400 text-sm">
-                        The most trusted name in live TCG breaking. Authentic pulls, instant service.
-                    </p>
+                    <p class="text-gray-400 text-sm">The most trusted name in live TCG breaking. Authentic pulls, instant service.</p>
                 </div>
                 <div>
                     <h4 class="font-bold mb-4 text-cyan-400">SHOP</h4>
@@ -507,7 +386,7 @@
         </div>
     </footer>
 
-    <!-- Cart Sidebar (Hidden by default) -->
+    <!-- Cart Sidebar -->
     <div id="cartSidebar" class="fixed inset-0 z-50 hidden">
         <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="toggleCart()"></div>
         <div class="absolute right-0 top-0 h-full w-full max-w-md glass border-l border-white/10 transform translate-x-full transition-transform duration-300" id="cartContent">
@@ -526,99 +405,70 @@
                         <span>TOTAL</span>
                         <span id="cartTotal" class="text-cyan-400">$0.00</span>
                     </div>
-                    <button class="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg font-bold text-lg hover:opacity-90 transition-opacity">
-                        CHECKOUT
-                    </button>
+                    <button class="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg font-bold text-lg hover:opacity-90 transition-opacity">CHECKOUT</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Initialize Lucide icons
         lucide.createIcons();
 
-        const inventory = [
-            {
-                id: 4,
-                name: "Pikachu Illustrator",
-                game: "pokemon",
-                image: "http://static.photos/yellow/640x360/4",
-                price: 1200,
-                condition: "NM"
-            },
-            {
-                id: 5,
-                name: "Mox Emerald",
-                game: "magic",
-                image: "http://static.photos/green/640x360/5",
-                price: 2800,
-                condition: "LP"
-            },
-            {
-                id: 6,
-                name: "Dark Magician",
-                game: "yugioh",
-                image: "http://static.photos/purple/640x360/6",
-                price: 150,
-                condition: "NM"
-            },
-            {
-                id: 7,
-                name: "Blastoise Base Set",
-                game: "pokemon",
-                image: "http://static.photos/blue/640x360/7",
-                price: 320,
-                condition: "HP"
-            },
-            {
-                id: 8,
-                name: "Time Walk",
-                game: "magic",
-                image: "http://static.photos/white/640x360/8",
-                price: 4500,
-                condition: "NM"
-            },
-            {
-                id: 9,
-                name: "Exodia Set",
-                game: "yugioh",
-                image: "http://static.photos/monochrome/640x360/9",
-                price: 600,
-                condition: "NM"
-            },
-            {
-                id: 10,
-                name: "Venusaur",
-                game: "pokemon",
-                image: "http://static.photos/green/640x360/10",
-                price: 180,
-                condition: "MP"
-            },
-            {
-                id: 11,
-                name: "Ancestral Recall",
-                game: "magic",
-                image: "http://static.photos/blue/640x360/11",
-                price: 5200,
-                condition: "NM"
-            }
-        ];
-
+        // ─── State ────────────────────────────────────────────────────────────────
+        let allListings = [];
+        let activeFilter = 'all';
         let cart = [];
 
-        // Render shop
+        // ─── Load listings from data/listings.json ────────────────────────────────
+        async function loadListings() {
+            try {
+                const resp = await fetch('/data/listings.json');
+                if (!resp.ok) throw new Error('listings.json not found');
+                const data = await resp.json();
+                // Only show items where stock > 0
+                allListings = data.listings.filter(item => item.stock > 0);
+                renderShop(activeFilter);
+            } catch (err) {
+                console.error('Failed to load listings:', err);
+                document.getElementById('shopLoading').classList.add('hidden');
+                document.getElementById('shopEmpty').classList.remove('hidden');
+            }
+        }
+
+        // ─── Render shop grid ─────────────────────────────────────────────────────
         function renderShop(filter = 'all') {
             const grid = document.getElementById('shopGrid');
-            const filtered = filter === 'all' ? inventory : inventory.filter(item => item.game === filter);
-            
+            const loading = document.getElementById('shopLoading');
+            const empty = document.getElementById('shopEmpty');
+
+            const filtered = filter === 'all'
+                ? allListings
+                : allListings.filter(item => item.game === filter);
+
+            loading.classList.add('hidden');
+
+            if (filtered.length === 0) {
+                grid.classList.add('hidden');
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            empty.classList.add('hidden');
+            grid.classList.remove('hidden');
+
             grid.innerHTML = filtered.map(card => `
                 <div class="glass rounded-lg overflow-hidden card-hover group border border-white/5 hover:border-white/20">
                     <div class="relative aspect-[3/4] overflow-hidden bg-gradient-to-b from-gray-800 to-black">
-                        <img src="${card.image}" alt="${card.name}" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity">
+                        <img src="${card.image}" alt="${card.name}"
+                             class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                             onerror="this.src='https://placehold.co/300x400/1a1a2e/ffffff?text=No+Image'">
                         <div class="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-sm text-xs rounded border border-white/10 uppercase font-bold text-gray-300">
                             ${card.condition}
                         </div>
+                        ${card.stock <= 3 ? `
+                        <div class="absolute top-2 right-2 px-2 py-1 bg-orange-500/80 backdrop-blur-sm text-xs rounded font-bold">
+                            ${card.stock === 1 ? 'LAST ONE' : card.stock + ' LEFT'}
+                        </div>` : ''}
                     </div>
                     <div class="p-4">
                         <h3 class="font-bold text-gray-200 mb-1 truncate">${card.name}</h3>
@@ -635,27 +485,22 @@
             lucide.createIcons();
         }
 
-        // Cart functions
+        // ─── Cart ─────────────────────────────────────────────────────────────────
         function addToCart(id) {
-            const item = inventory.find(i => i.id === id);
-            
-            if (item) {
-                cart.push({...item, cartId: Date.now()});
-                updateCart();
-                
-                // Visual feedback
-                const btn = event.target.closest('button');
-                const originalHTML = btn.innerHTML;
-                btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> ADDED';
-                btn.classList.add('bg-green-500', 'text-black', 'border-green-500');
+            const item = allListings.find(i => i.id === id);
+            if (!item) return;
+            cart.push({ ...item, cartId: Date.now() });
+            updateCart();
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> ADDED';
+            btn.classList.add('bg-green-500', 'text-black');
+            lucide.createIcons();
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('bg-green-500', 'text-black');
                 lucide.createIcons();
-                
-                setTimeout(() => {
-                    btn.innerHTML = originalHTML;
-                    btn.classList.remove('bg-green-500', 'text-black', 'border-green-500');
-                    lucide.createIcons();
-                }, 1500);
-            }
+            }, 1500);
         }
 
         function removeFromCart(cartId) {
@@ -667,18 +512,17 @@
             const count = document.getElementById('cartCount');
             const items = document.getElementById('cartItems');
             const total = document.getElementById('cartTotal');
-            
             count.textContent = cart.length;
             count.classList.add('animate-bounce');
             setTimeout(() => count.classList.remove('animate-bounce'), 1000);
-            
             if (cart.length === 0) {
                 items.innerHTML = '<p class="text-gray-400 text-center py-8">Your cart is empty</p>';
                 total.textContent = '$0.00';
             } else {
                 items.innerHTML = cart.map(item => `
                     <div class="flex gap-4 p-3 rounded-lg bg-white/5 border border-white/10">
-                        <img src="${item.image}" class="w-16 h-16 object-cover rounded" alt="${item.name}">
+                        <img src="${item.image}" class="w-16 h-16 object-cover rounded" alt="${item.name}"
+                             onerror="this.src='https://placehold.co/64x64/1a1a2e/ffffff?text=?'">
                         <div class="flex-1">
                             <h4 class="font-bold text-sm text-gray-200">${item.name}</h4>
                             <p class="text-cyan-400 font-bold text-sm">$${item.price.toLocaleString()}</p>
@@ -688,9 +532,7 @@
                         </button>
                     </div>
                 `).join('');
-                
-                const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
-                total.textContent = '$' + totalPrice.toLocaleString();
+                total.textContent = '$' + cart.reduce((sum, i) => sum + i.price, 0).toLocaleString();
                 lucide.createIcons();
             }
         }
@@ -698,29 +540,20 @@
         function toggleCart() {
             const sidebar = document.getElementById('cartSidebar');
             const content = document.getElementById('cartContent');
-            
             if (sidebar.classList.contains('hidden')) {
                 sidebar.classList.remove('hidden');
-                setTimeout(() => {
-                    content.classList.remove('translate-x-full');
-                }, 10);
+                setTimeout(() => content.classList.remove('translate-x-full'), 10);
             } else {
                 content.classList.add('translate-x-full');
-                setTimeout(() => {
-                    sidebar.classList.add('hidden');
-                }, 300);
+                setTimeout(() => sidebar.classList.add('hidden'), 300);
             }
         }
 
-        // Event listeners
+        // ─── Event listeners ──────────────────────────────────────────────────────
         document.getElementById('cartBtn').addEventListener('click', toggleCart);
-        
         document.getElementById('mobileMenuBtn').addEventListener('click', () => {
-            const menu = document.getElementById('mobileMenu');
-            menu.classList.toggle('hidden');
+            document.getElementById('mobileMenu').classList.toggle('hidden');
         });
-
-        // Filter buttons
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 document.querySelectorAll('.filter-btn').forEach(b => {
@@ -729,11 +562,10 @@
                 });
                 e.target.classList.remove('glass');
                 e.target.classList.add('active', 'bg-cyan-500', 'text-black');
-                renderShop(e.target.dataset.filter);
+                activeFilter = e.target.dataset.filter;
+                renderShop(activeFilter);
             });
         });
-
-        // Smooth scroll
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -745,105 +577,58 @@
             });
         });
 
-        // Initialize shop
-        renderShop();
-
-        // ─── Twitch live status ───────────────────────────────────────────────────
+        // ─── Twitch status ────────────────────────────────────────────────────────
         function formatUptime(startedAt) {
-            const start = new Date(startedAt);
-            const now = new Date();
-            const diff = Math.floor((now - start) / 1000);
+            const diff = Math.floor((new Date() - new Date(startedAt)) / 1000);
             const hours = Math.floor(diff / 3600);
             const minutes = Math.floor((diff % 3600) / 60);
-            if (hours > 0) {
-                return `Stream Started ${hours}h ${minutes}m ago`;
-            }
-            return `Stream Started ${minutes}m ago`;
+            return hours > 0 ? `Stream Started ${hours}h ${minutes}m ago` : `Stream Started ${minutes}m ago`;
         }
-
         function formatViewerCount(count) {
-            if (count >= 1000) {
-                return (count / 1000).toFixed(1).replace(/\.0$/, '') + 'K Viewers';
-            }
-            return count.toLocaleString() + ' Viewers';
+            return count >= 1000 ? (count / 1000).toFixed(1).replace(/\.0$/, '') + 'K Viewers' : count.toLocaleString() + ' Viewers';
         }
-
         function updateTwitchStatus(data) {
             const heroBadge = document.getElementById('hero-live-badge');
             const heroStats = document.getElementById('hero-stats');
             const streamLive = document.getElementById('stream-live');
             const streamOffline = document.getElementById('stream-offline');
             const navLiveLink = document.querySelector('a[href="#live"]');
-
             if (data.is_live) {
-                // Hero badge — live
                 heroBadge.className = 'inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-green-500/20 border border-green-500/50 text-green-400 font-semibold live-pulse';
                 heroBadge.innerHTML = '<span class="w-2 h-2 bg-green-500 rounded-full"></span><span class="text-sm tracking-wider">LIVE NOW - RIPPING PACKS</span>';
-
-                // Hero stats
                 heroStats.classList.remove('hidden');
                 document.getElementById('hero-viewer-count').textContent = formatViewerCount(data.viewer_count);
                 document.getElementById('hero-game-name').textContent = data.game_name || '';
-                lucide.createIcons();
-
-                // Stream section
                 streamLive.classList.remove('hidden');
                 streamOffline.classList.add('hidden');
                 document.getElementById('stream-uptime').textContent = formatUptime(data.started_at);
                 document.getElementById('stream-title').textContent = data.title || 'Live Stream';
                 document.getElementById('stream-game').textContent = data.game_name || '';
                 document.getElementById('stream-viewers').textContent = data.viewer_count.toLocaleString() + ' viewers';
-
-                // Thumbnail URL already has placeholders replaced by the GitHub Action
-                if (data.thumbnail_url) {
-                    document.getElementById('stream-thumbnail').src = data.thumbnail_url;
-                }
-
-                // Nav link
-                if (navLiveLink) {
-                    navLiveLink.textContent = 'LIVE NOW';
-                    navLiveLink.classList.add('text-green-400');
-                }
-
-                lucide.createIcons();
+                if (data.thumbnail_url) document.getElementById('stream-thumbnail').src = data.thumbnail_url;
+                if (navLiveLink) { navLiveLink.textContent = 'LIVE NOW'; navLiveLink.classList.add('text-green-400'); }
             } else {
-                // Hero badge — offline
                 heroBadge.className = 'inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-gray-500/20 border border-gray-500/50 text-gray-400 font-semibold';
                 heroBadge.innerHTML = '<span class="w-2 h-2 bg-gray-500 rounded-full"></span><span class="text-sm tracking-wider">STREAM OFFLINE</span>';
-
-                // Hero stats hidden
                 heroStats.classList.add('hidden');
-
-                // Stream section
                 streamLive.classList.add('hidden');
                 streamOffline.classList.remove('hidden');
-
-                // Nav link
-                if (navLiveLink) {
-                    navLiveLink.textContent = 'LIVE NOW';
-                    navLiveLink.classList.remove('text-green-400');
-                }
-
-                lucide.createIcons();
+                if (navLiveLink) { navLiveLink.textContent = 'LIVE NOW'; navLiveLink.classList.remove('text-green-400'); }
             }
+            lucide.createIcons();
         }
-
         async function checkTwitchStatus() {
             try {
-                // Fetch the static JSON file written by the GitHub Action
                 const resp = await fetch('/data/twitch-status.json');
-                if (!resp.ok) throw new Error('Status file not found');
-                const data = await resp.json();
-                updateTwitchStatus(data);
-            } catch (err) {
-                console.error('Failed to load Twitch status:', err);
-                // Default to offline if file doesn't exist yet
+                if (!resp.ok) throw new Error('not found');
+                updateTwitchStatus(await resp.json());
+            } catch {
                 updateTwitchStatus({ is_live: false });
             }
         }
 
-        // Check on load, then re-check every 5 minutes
-        // (the JSON file itself is refreshed every 5 min by GitHub Actions)
+        // ─── Init ─────────────────────────────────────────────────────────────────
+        loadListings();
         checkTwitchStatus();
         setInterval(checkTwitchStatus, 5 * 60 * 1000);
     </script>
