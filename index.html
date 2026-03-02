@@ -650,13 +650,9 @@
             });
 
             twitchPlayer.addEventListener(Twitch.Player.READY, () => {
-                // Check initial state once player is ready
-                // The ONLINE/OFFLINE events will fire shortly after if live
-                setTimeout(() => {
-                    if (twitchPlayer.isPaused && !twitchPlayer.getChannel) return;
-                    // Default to offline until ONLINE event fires
-                    setLiveStatus(false);
-                }, 2000);
+                // Let ONLINE/OFFLINE events handle status — start as offline by default
+                // ONLINE will fire and override this if the channel is live
+                setLiveStatus(false);
             });
         }
 
