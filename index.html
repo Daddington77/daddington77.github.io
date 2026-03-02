@@ -452,7 +452,7 @@
     </div>
 
     <script>
-        lucide.createIcons();
+        if (typeof lucide !== "undefined") lucide.createIcons();
 
         // ─── State ────────────────────────────────────────────────────────────────
         let allListings = [];
@@ -666,7 +666,7 @@
                 offlineMsg.classList.remove('hidden');
                 if (navLiveLink) { navLiveLink.textContent = 'LIVE NOW'; navLiveLink.classList.remove('text-green-400'); }
             }
-            if (typeof lucide !== "undefined") lucide.createIcons();
+            if (typeof lucide !== "undefined") lucide.createIcons(); else document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
         }
         async function checkTwitchStatus() {
             try {
@@ -788,7 +788,7 @@
             spinner.classList.remove('hidden');
             msg.classList.add('hidden');
 
-            const { error, paymentIntent } = await stripe.confirmPayment({
+            const { error } = await stripe.confirmPayment({
                 elements,
                 confirmParams: {
                     return_url: 'https://daddington77.github.io/success.html',
@@ -802,14 +802,11 @@
                 btn.disabled = false;
                 btnText.textContent = 'PAY NOW';
                 spinner.classList.add('hidden');
-            } else if (paymentIntent && (paymentIntent.status === 'succeeded' || paymentIntent.status === 'processing')) {
+            } else {
                 closePaymentModal();
                 cart = [];
                 updateCart();
-                window.location.href = 'https://daddington77.github.io/success.html';
-            } else {
-                // Fallback — redirect anyway
-                window.location.href = 'https://daddington77.github.io/success.html';
+                window.location.replace('https://daddington77.github.io/success.html');
             }
         }
 
