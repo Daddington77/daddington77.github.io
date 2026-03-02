@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daddington77 | Live Trading Card Breaks</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://js.stripe.com/v3/"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
@@ -170,7 +171,7 @@
 
             <!-- Twitch embed — always visible, shows live or offline automatically -->
             <div class="glass rounded-2xl overflow-hidden border border-white/10" style="aspect-ratio: 16/9;">
-                <div id="twitch-embed" style="width:100%;height:100%;"></div>
+                <iframe src="https://player.twitch.tv/?channel=daddington77&parent=daddington77.github.io" frameborder="0" allowfullscreen="true" scrolling="no" height="100%" width="100%"></iframe>
             </div>
 
             <!-- Stream info bar — shown when live -->
@@ -402,13 +403,11 @@
 
                 <!-- Stripe Elements mount point -->
                 <div class="px-6 pb-4">
-                    <div id="payment-element" class="min-h-[200px]">
-                        <!-- Loading state -->
-                        <div id="stripeLoading" class="flex flex-col items-center justify-center py-12 text-gray-400 gap-3">
-                            <div class="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
-                            <span class="text-sm">Loading payment form...</span>
-                        </div>
+                    <div id="stripeLoading" class="flex flex-col items-center justify-center py-12 text-gray-400 gap-3">
+                        <div class="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+                        <span class="text-sm">Loading payment form...</span>
                     </div>
+                    <div id="payment-element"></div>
                     <div id="payment-message" class="hidden mt-3 text-sm text-red-400 text-center"></div>
                 </div>
 
@@ -446,17 +445,14 @@
                         <span>TOTAL</span>
                         <span id="cartTotal" class="text-cyan-400">$0.00</span>
                     </div>
-                    <button id="checkoutBtn" onclick="startCheckout()" class="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg font-bold text-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
-                        <span id="checkoutBtnText">CHECKOUT</span>
-                        <span id="checkoutSpinner" class="hidden w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                    </button>
+                    <button id="checkoutBtn" onclick="startCheckout()" class="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg font-bold text-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2"><span id="checkoutBtnText">CHECKOUT</span><span id="checkoutSpinner" class="hidden w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span></button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        if (typeof lucide !== "undefined") lucide.createIcons();
+        lucide.createIcons();
 
         // ─── State ────────────────────────────────────────────────────────────────
         let allListings = [];
@@ -526,7 +522,7 @@
                     </div>
                 </div>
             `).join('');
-            if (typeof lucide !== "undefined") lucide.createIcons();
+            lucide.createIcons();
         }
 
         // ─── Cart ─────────────────────────────────────────────────────────────────
@@ -539,11 +535,11 @@
             const originalHTML = btn.innerHTML;
             btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> ADDED';
             btn.classList.add('bg-green-500', 'text-black');
-            if (typeof lucide !== "undefined") lucide.createIcons();
+            lucide.createIcons();
             setTimeout(() => {
                 btn.innerHTML = originalHTML;
                 btn.classList.remove('bg-green-500', 'text-black');
-                if (typeof lucide !== "undefined") lucide.createIcons();
+                lucide.createIcons();
             }, 1500);
         }
 
@@ -577,7 +573,7 @@
                     </div>
                 `).join('');
                 total.textContent = '$' + cart.reduce((sum, i) => sum + i.price, 0).toLocaleString();
-                if (typeof lucide !== "undefined") lucide.createIcons();
+                lucide.createIcons();
             }
         }
 
@@ -622,41 +618,16 @@
         });
 
         // ─── Twitch status ────────────────────────────────────────────────────────
-        // ─── Twitch Player API ────────────────────────────────────────────────────
-        let twitchPlayer = null;
-        let streamStartTime = null;
-        let uptimeInterval = null;
-
-        function initTwitchPlayer() {
-            twitchPlayer = new Twitch.Player('twitch-embed', {
-                channel: 'daddintong77',
-                parent: ['daddington77.github.io'],
-                width: '100%',
-                height: '100%',
-                autoplay: false,
-                muted: false,
-            });
-
-            twitchPlayer.addEventListener(Twitch.Player.ONLINE, () => {
-                streamStartTime = new Date();
-                setLiveStatus(true);
-                startUptimeClock();
-            });
-
-            twitchPlayer.addEventListener(Twitch.Player.OFFLINE, () => {
-                streamStartTime = null;
-                setLiveStatus(false);
-                stopUptimeClock();
-            });
-
-            twitchPlayer.addEventListener(Twitch.Player.READY, () => {
-                // Let ONLINE/OFFLINE events handle status — start as offline by default
-                // ONLINE will fire and override this if the channel is live
-                setLiveStatus(false);
-            });
+        function formatUptime(startedAt) {
+            const diff = Math.floor((new Date() - new Date(startedAt)) / 1000);
+            const hours = Math.floor(diff / 3600);
+            const minutes = Math.floor((diff % 3600) / 60);
+            return hours > 0 ? `Stream Started ${hours}h ${minutes}m ago` : `Stream Started ${minutes}m ago`;
         }
-
-        function setLiveStatus(isLive) {
+        function formatViewerCount(count) {
+            return count >= 1000 ? (count / 1000).toFixed(1).replace(/\.0$/, '') + 'K Viewers' : count.toLocaleString() + ' Viewers';
+        }
+        function updateTwitchStatus(data) {
             const heroBadge   = document.getElementById('hero-live-badge');
             const heroStats   = document.getElementById('hero-stats');
             const navLiveLink = document.querySelector('a[href="#live"]');
@@ -666,10 +637,12 @@
             const infoBar     = document.getElementById('stream-info-bar');
             const offlineMsg  = document.getElementById('stream-offline-msg');
 
-            if (isLive) {
+            if (data.is_live) {
                 heroBadge.className = 'inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-green-500/20 border border-green-500/50 text-green-400 font-semibold live-pulse';
-                heroBadge.innerHTML = '<span class="w-2 h-2 bg-green-500 rounded-full"></span><span class="text-sm tracking-wider" id="hero-live-text">🔴 LIVE NOW</span>';
+                heroBadge.innerHTML = '<span class="w-2 h-2 bg-green-500 rounded-full"></span><span class="text-sm tracking-wider">🔴 LIVE NOW</span>';
                 heroStats.classList.remove('hidden');
+                document.getElementById('hero-viewer-count').textContent = formatViewerCount(data.viewer_count);
+                document.getElementById('hero-game-name').textContent = data.game_name || '';
                 dot.className = 'w-3 h-3 bg-red-500 rounded-full live-pulse';
                 heading.textContent = 'LIVE BREAK';
                 meta.classList.remove('hidden');
@@ -677,7 +650,11 @@
                 infoBar.classList.remove('hidden');
                 infoBar.style.display = 'flex';
                 offlineMsg.classList.add('hidden');
-                if (navLiveLink) navLiveLink.classList.add('text-green-400');
+                document.getElementById('stream-uptime').textContent = formatUptime(data.started_at);
+                document.getElementById('stream-title').textContent = data.title || 'Live Stream';
+                document.getElementById('stream-game').textContent = data.game_name || '';
+                document.getElementById('stream-viewers').textContent = data.viewer_count.toLocaleString() + ' viewers';
+                if (navLiveLink) { navLiveLink.textContent = 'LIVE NOW'; navLiveLink.classList.add('text-green-400'); }
             } else {
                 heroBadge.className = 'inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-gray-500/20 border border-gray-500/50 text-gray-400 font-semibold';
                 heroBadge.innerHTML = '<span class="w-2 h-2 bg-gray-500 rounded-full"></span><span class="text-sm tracking-wider">STREAM OFFLINE</span>';
@@ -687,31 +664,23 @@
                 meta.classList.add('hidden');
                 infoBar.classList.add('hidden');
                 offlineMsg.classList.remove('hidden');
-                if (navLiveLink) navLiveLink.classList.remove('text-green-400');
+                if (navLiveLink) { navLiveLink.textContent = 'LIVE NOW'; navLiveLink.classList.remove('text-green-400'); }
             }
             if (typeof lucide !== "undefined") lucide.createIcons();
         }
-
-        function startUptimeClock() {
-            stopUptimeClock();
-            uptimeInterval = setInterval(() => {
-                if (!streamStartTime) return;
-                const diff = Math.floor((new Date() - streamStartTime) / 1000);
-                const hours = Math.floor(diff / 3600);
-                const minutes = Math.floor((diff % 3600) / 60);
-                const el = document.getElementById('stream-uptime');
-                if (el) el.textContent = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-            }, 10000);
+        async function checkTwitchStatus() {
+            try {
+                const resp = await fetch('/data/twitch-status.json');
+                if (!resp.ok) throw new Error('not found');
+                updateTwitchStatus(await resp.json());
+            } catch {
+                updateTwitchStatus({ is_live: false });
+            }
         }
-
-        function stopUptimeClock() {
-            if (uptimeInterval) { clearInterval(uptimeInterval); uptimeInterval = null; }
-        }
-
 
         // ─── Stripe Embedded Checkout ─────────────────────────────────────────────
         const WORKER_URL = 'https://dadcheckout.juggaloateyourdog.workers.dev';
-        const STRIPE_PUBLISHABLE_KEY = 'pk_test_51T6NVrF6q8EP5oFgysCPo03PCwS70bSHIA70eW17ajgfj2PK32Tny1TnbFKkjaQQJO2fTVr1uwvBvX5Id3WS17V200Fn0m5elu'; // ← replace with his pk_ key
+        const STRIPE_PUBLISHABLE_KEY = 'pk_live_REPLACE_WITH_REAL_KEY'; // ← replace with real pk_ key
 
         let stripe = null;
         let elements = null;
@@ -723,7 +692,6 @@
 
         async function startCheckout() {
             if (cart.length === 0) return;
-
             initStripe();
 
             const btn = document.getElementById('checkoutBtn');
@@ -735,7 +703,6 @@
             spinner.classList.remove('hidden');
 
             try {
-                // Ask Worker to create a PaymentIntent
                 const resp = await fetch(`${WORKER_URL}/create-payment-intent`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -748,7 +715,6 @@
                     throw new Error(data.error || 'Could not start checkout');
                 }
 
-                // Mount Stripe Elements into the modal
                 elements = stripe.elements({
                     clientSecret: data.clientSecret,
                     appearance: {
@@ -764,40 +730,48 @@
                     },
                 });
 
-                // Remove loading spinner from mount point
-                document.getElementById('stripeLoading').style.display = 'none';
-
                 paymentElement = elements.create('payment', {
                     layout: 'tabs',
                     wallets: { applePay: 'auto', googlePay: 'auto' },
                 });
                 paymentElement.mount('#payment-element');
 
-                // Enable pay button once Stripe element is ready
+                // Hide spinner and enable pay button only once Stripe is fully rendered
                 paymentElement.on('ready', () => {
+                    document.getElementById('stripeLoading').style.display = 'none';
                     const payBtn = document.getElementById('payNowBtn');
                     payBtn.disabled = false;
                     payBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                 });
+                // Fallback — enable after 5s in case ready event misfires
+                setTimeout(() => {
+                    document.getElementById('stripeLoading').style.display = 'none';
+                    const payBtn = document.getElementById('payNowBtn');
+                    if (payBtn && payBtn.disabled) {
+                        payBtn.disabled = false;
+                        payBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    }
+                }, 5000);
 
-                // Update modal total
                 const total = cart.reduce((s, i) => s + i.price, 0);
                 document.getElementById('paymentTotal').textContent = '$' + total.toLocaleString();
 
-                // Show modal
                 openPaymentModal();
 
             } catch (err) {
                 console.error('Checkout error:', err);
-                const errMsg = err.message || 'Something went wrong';
-                btnText.textContent = '✕ ' + errMsg;
+                btnText.textContent = 'ERROR — TRY AGAIN';
                 spinner.classList.add('hidden');
                 btn.disabled = false;
-                btn.style.background = 'linear-gradient(to right, #ef4444, #dc2626)';
+                btn.classList.add('bg-red-500');
                 setTimeout(() => {
                     btnText.textContent = 'CHECKOUT';
-                    btn.style.background = '';
-                }, 4000);
+                    btn.classList.remove('bg-red-500');
+                }, 3000);
+            } finally {
+                btnText.textContent = 'CHECKOUT';
+                spinner.classList.add('hidden');
+                btn.disabled = false;
             }
         }
 
@@ -814,10 +788,10 @@
             spinner.classList.remove('hidden');
             msg.classList.add('hidden');
 
-            const { error } = await stripe.confirmPayment({
+            const { error, paymentIntent } = await stripe.confirmPayment({
                 elements,
                 confirmParams: {
-                    return_url: window.location.origin + '/success.html',
+                    return_url: 'https://daddington77.github.io/success.html',
                 },
                 redirect: 'if_required',
             });
@@ -828,12 +802,14 @@
                 btn.disabled = false;
                 btnText.textContent = 'PAY NOW';
                 spinner.classList.add('hidden');
-            } else {
-                // Payment succeeded without redirect (e.g. card)
+            } else if (paymentIntent && (paymentIntent.status === 'succeeded' || paymentIntent.status === 'processing')) {
                 closePaymentModal();
                 cart = [];
                 updateCart();
-                window.location.href = '/success.html';
+                window.location.href = 'https://daddington77.github.io/success.html';
+            } else {
+                // Fallback — redirect anyway
+                window.location.href = 'https://daddington77.github.io/success.html';
             }
         }
 
@@ -846,14 +822,15 @@
 
         function closePaymentModal() {
             document.getElementById('paymentModal').classList.add('hidden');
-            // Reset payment element
             if (paymentElement) {
                 paymentElement.unmount();
                 paymentElement = null;
                 elements = null;
             }
-            document.getElementById('stripeLoading').style.display = 'flex';
-            document.getElementById('payment-element').innerHTML = '<div id="stripeLoading" class="flex flex-col items-center justify-center py-12 text-gray-400 gap-3"><div class="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div><span class="text-sm">Loading payment form...</span></div>';
+            const loading = document.getElementById('stripeLoading');
+            if (loading) loading.style.display = 'flex';
+            const pe = document.getElementById('payment-element');
+            if (pe) pe.innerHTML = '';
             document.getElementById('payment-message').classList.add('hidden');
             const payBtn = document.getElementById('payNowBtn');
             payBtn.disabled = true;
@@ -861,15 +838,12 @@
             document.getElementById('payNowText').textContent = 'PAY NOW';
         }
 
-        // Close modal on overlay click
         document.getElementById('paymentOverlay').addEventListener('click', closePaymentModal);
 
         // ─── Init ─────────────────────────────────────────────────────────────────
         loadListings();
-        // Twitch Player API is loaded via script tag below
+        checkTwitchStatus();
+        setInterval(checkTwitchStatus, 5 * 60 * 1000);
     </script>
-    <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js" onload="lucide.createIcons()"></script>
-    <script src="https://player.twitch.tv/js/embed/v1.js" onload="initTwitchPlayer()"></script>
 </body>
 </html>
-
