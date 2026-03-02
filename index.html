@@ -33,6 +33,79 @@
         .grid-pattern { background-image: radial-gradient(circle at 1px 1px, rgba(0, 243, 255, 0.15) 1px, transparent 0); background-size: 40px 40px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .animate-spin { animation: spin 1s linear infinite; }
+
+        /* ── Success Modal ─────────────────────────────────────────────────────── */
+        #successModal { display: none; }
+        #successModal.show { display: flex; }
+
+        @keyframes successPop {
+            0%   { opacity: 0; transform: scale(0.7) translateY(30px); }
+            60%  { transform: scale(1.04) translateY(-4px); }
+            80%  { transform: scale(0.98) translateY(2px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes checkDraw {
+            0%   { stroke-dashoffset: 80; }
+            100% { stroke-dashoffset: 0; }
+        }
+        @keyframes circleDraw {
+            0%   { stroke-dashoffset: 200; }
+            100% { stroke-dashoffset: 0; }
+        }
+        @keyframes confettiFall {
+            0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(180px) rotate(720deg); opacity: 0; }
+        }
+        @keyframes shimmer {
+            0%   { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+
+        .success-card {
+            animation: successPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        .success-circle {
+            stroke-dasharray: 200;
+            animation: circleDraw 0.6s ease-out 0.1s both;
+        }
+        .success-check {
+            stroke-dasharray: 80;
+            animation: checkDraw 0.4s ease-out 0.55s both;
+        }
+        .confetti-piece {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            animation: confettiFall 1.4s ease-in forwards;
+        }
+        .success-title-shimmer {
+            background: linear-gradient(90deg, #00f3ff 0%, #bc13fe 30%, #39ff14 60%, #00f3ff 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 2.5s linear infinite 0.8s;
+        }
+        .success-glow {
+            box-shadow:
+                0 0 40px rgba(0, 243, 255, 0.25),
+                0 0 80px rgba(57, 255, 20, 0.1),
+                inset 0 0 40px rgba(0, 243, 255, 0.05);
+        }
+        .okay-btn {
+            background: linear-gradient(135deg, #00f3ff 0%, #0090a8 50%, #bc13fe 100%);
+            background-size: 200% 200%;
+            transition: background-position 0.4s ease, transform 0.15s ease, box-shadow 0.3s ease;
+        }
+        .okay-btn:hover {
+            background-position: right center;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 243, 255, 0.4);
+        }
+        .okay-btn:active {
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body class="gradient-bg min-h-screen">
@@ -150,7 +223,6 @@
     <!-- Live Stream -->
     <section id="live" class="py-20 px-4 sm:px-6 lg:px-8">
         <div class="max-w-7xl mx-auto">
-            <!-- Stream header — updates based on live status -->
             <div class="flex items-center justify-between mb-8">
                 <h2 class="font-orbitron text-3xl md:text-4xl font-bold flex items-center space-x-3">
                     <span id="stream-dot" class="w-3 h-3 bg-gray-500 rounded-full"></span>
@@ -167,13 +239,9 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Twitch embed — always visible, shows live or offline automatically -->
             <div class="glass rounded-2xl overflow-hidden border border-white/10" style="aspect-ratio: 16/9;">
                 <div id="twitch-embed" style="width:100%;height:100%;"></div>
             </div>
-
-            <!-- Stream info bar — shown when live -->
             <div id="stream-info-bar" class="hidden mt-4 glass rounded-xl px-5 py-3 border border-white/10 flex items-center justify-between flex-wrap gap-3">
                 <div>
                     <p id="stream-title" class="font-bold text-white"></p>
@@ -185,8 +253,6 @@
                     Open on Twitch
                 </a>
             </div>
-
-            <!-- Shown only when offline -->
             <div id="stream-offline-msg" class="mt-4 text-center">
                 <p class="text-gray-500 text-sm">Stream is currently offline — follow on Twitch to get notified!</p>
                 <a href="https://www.twitch.tv/daddington77" target="_blank"
@@ -252,7 +318,6 @@
                     <button class="filter-btn px-4 py-2 rounded-lg glass hover:bg-white/10 transition-all" data-filter="yugioh">YU-GI-OH</button>
                 </div>
             </div>
-
             <div id="shopLoading" class="text-center py-20 text-gray-400">
                 <i data-lucide="loader" class="w-8 h-8 mx-auto mb-4 animate-spin"></i>
                 <p>Loading listings...</p>
@@ -373,12 +438,112 @@
         </div>
     </footer>
 
-    <!-- Stripe Payment Modal -->
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         SUCCESS MODAL
+         ══════════════════════════════════════════════════════════════════════ -->
+    <div id="successModal" class="fixed inset-0 z-[80] items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/85 backdrop-blur-md"></div>
+
+        <!-- Confetti container -->
+        <div id="confettiContainer" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
+
+        <!-- Card -->
+        <div class="success-card relative w-full max-w-sm mx-auto success-glow rounded-3xl overflow-hidden"
+             style="background: linear-gradient(135deg, rgba(10,10,20,0.98) 0%, rgba(15,10,30,0.98) 100%); border: 1px solid rgba(0,243,255,0.25);">
+
+            <!-- Top accent bar -->
+            <div style="height:3px; background: linear-gradient(90deg, #00f3ff, #bc13fe, #39ff14, #00f3ff); background-size: 200% auto; animation: shimmer 2s linear infinite;"></div>
+
+            <!-- Glow orb behind checkmark -->
+            <div class="absolute top-8 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full"
+                 style="background: radial-gradient(circle, rgba(57,255,20,0.18) 0%, transparent 70%); filter: blur(8px);"></div>
+
+            <div class="px-8 pt-10 pb-8 flex flex-col items-center text-center relative">
+
+                <!-- Animated SVG checkmark -->
+                <div class="relative mb-6">
+                    <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Outer glow circle -->
+                        <circle cx="40" cy="40" r="38" stroke="rgba(57,255,20,0.15)" stroke-width="2"/>
+                        <!-- Animated circle -->
+                        <circle class="success-circle" cx="40" cy="40" r="32"
+                                stroke="#39ff14" stroke-width="2.5"
+                                stroke-linecap="round"
+                                transform="rotate(-90 40 40)"/>
+                        <!-- Animated checkmark -->
+                        <polyline class="success-check" points="24,40 35,52 56,28"
+                                  stroke="#39ff14" stroke-width="3.5"
+                                  stroke-linecap="round" stroke-linejoin="round"
+                                  fill="none"/>
+                    </svg>
+                    <!-- Pulse ring -->
+                    <div class="absolute inset-0 rounded-full animate-ping"
+                         style="background: rgba(57,255,20,0.08); animation-duration: 1.8s; animation-delay: 0.8s;"></div>
+                </div>
+
+                <!-- Title -->
+                <h2 class="font-orbitron text-2xl font-black mb-1 success-title-shimmer">
+                    ORDER PLACED!
+                </h2>
+                <p class="text-gray-400 text-sm mb-6">Your packs are locked in for the next live break ⚡</p>
+
+                <!-- Divider -->
+                <div class="w-full h-px mb-6" style="background: linear-gradient(90deg, transparent, rgba(0,243,255,0.3), transparent);"></div>
+
+                <!-- Order summary -->
+                <div id="successOrderSummary" class="w-full space-y-2 mb-6 max-h-40 overflow-y-auto pr-1"></div>
+
+                <!-- Total -->
+                <div class="w-full flex justify-between items-center px-4 py-3 rounded-xl mb-6"
+                     style="background: rgba(0,243,255,0.06); border: 1px solid rgba(0,243,255,0.15);">
+                    <span class="text-gray-400 text-sm font-semibold uppercase tracking-wider">Total Paid</span>
+                    <span id="successTotal" class="font-orbitron font-bold text-cyan-400 text-lg"></span>
+                </div>
+
+                <!-- What's next -->
+                <div class="w-full text-left space-y-2 mb-8">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest font-semibold mb-3">What happens next</p>
+                    <div class="flex items-start gap-3 text-sm text-gray-300">
+                        <span class="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold mt-0.5"
+                              style="background: rgba(188,19,254,0.3); border: 1px solid rgba(188,19,254,0.5); color: #bc13fe;">1</span>
+                        <span>Watch for your username on the next live Twitch break</span>
+                    </div>
+                    <div class="flex items-start gap-3 text-sm text-gray-300">
+                        <span class="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold mt-0.5"
+                              style="background: rgba(0,243,255,0.2); border: 1px solid rgba(0,243,255,0.4); color: #00f3ff;">2</span>
+                        <span>Daddington rips your packs live on stream</span>
+                    </div>
+                    <div class="flex items-start gap-3 text-sm text-gray-300">
+                        <span class="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold mt-0.5"
+                              style="background: rgba(57,255,20,0.2); border: 1px solid rgba(57,255,20,0.4); color: #39ff14;">3</span>
+                        <span>All cards are top-loaded and shipped to you</span>
+                    </div>
+                </div>
+
+                <!-- Okay button -->
+                <button onclick="closeSuccessModal()"
+                        class="okay-btn w-full py-4 rounded-xl font-orbitron font-bold text-base tracking-wider text-black">
+                    AWESOME, LET'S GO! ⚡
+                </button>
+
+                <!-- Twitch link -->
+                <a href="https://www.twitch.tv/daddington77" target="_blank"
+                   class="mt-4 text-sm text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1.5">
+                    <i data-lucide="twitch" class="w-3.5 h-3.5"></i>
+                    Watch on Twitch while you wait
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         STRIPE PAYMENT MODAL
+         ══════════════════════════════════════════════════════════════════════ -->
     <div id="paymentModal" class="fixed inset-0 z-[60] hidden">
         <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" id="paymentOverlay"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4">
             <div class="relative w-full max-w-md glass border border-white/10 rounded-2xl overflow-hidden">
-                <!-- Header -->
                 <div class="flex items-center justify-between p-6 border-b border-white/10">
                     <div>
                         <h3 class="font-orbitron text-xl font-bold">SECURE CHECKOUT</h3>
@@ -391,19 +556,14 @@
                         <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
                 </div>
-
-                <!-- Order summary -->
                 <div class="px-6 pt-4 pb-2">
                     <div class="flex justify-between items-center text-sm text-gray-400 mb-2">
                         <span>Order total</span>
                         <span id="paymentTotal" class="text-white font-bold text-base"></span>
                     </div>
                 </div>
-
-                <!-- Stripe Elements mount point -->
                 <div class="px-6 pb-4">
                     <div id="payment-element" class="min-h-[200px]">
-                        <!-- Loading state -->
                         <div id="stripeLoading" class="flex flex-col items-center justify-center py-12 text-gray-400 gap-3">
                             <div class="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
                             <span class="text-sm">Loading payment form...</span>
@@ -411,8 +571,6 @@
                     </div>
                     <div id="payment-message" class="hidden mt-3 text-sm text-red-400 text-center"></div>
                 </div>
-
-                <!-- Pay button -->
                 <div class="px-6 pb-6">
                     <button id="payNowBtn" onclick="submitPayment()" disabled
                         class="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg font-bold text-lg transition-all flex items-center justify-center gap-2 opacity-50 cursor-not-allowed">
@@ -458,18 +616,18 @@
     <script>
         if (typeof lucide !== "undefined") lucide.createIcons();
 
-        // ─── State ────────────────────────────────────────────────────────────────
+        // ─── State ─────────────────────────────────────────────────────────────────
         let allListings = [];
         let activeFilter = 'all';
         let cart = [];
+        let lastOrderItems = [];   // snapshot of cart at payment time for success modal
 
-        // ─── Load listings from data/listings.json ────────────────────────────────
+        // ─── Load listings ──────────────────────────────────────────────────────────
         async function loadListings() {
             try {
                 const resp = await fetch('/data/listings.json');
                 if (!resp.ok) throw new Error('listings.json not found');
                 const data = await resp.json();
-                // Only show items where stock > 0
                 allListings = data.listings.filter(item => item.stock > 0);
                 renderShop(activeFilter);
             } catch (err) {
@@ -479,27 +637,20 @@
             }
         }
 
-        // ─── Render shop grid ─────────────────────────────────────────────────────
+        // ─── Render shop grid ───────────────────────────────────────────────────────
         function renderShop(filter = 'all') {
             const grid = document.getElementById('shopGrid');
             const loading = document.getElementById('shopLoading');
             const empty = document.getElementById('shopEmpty');
-
-            const filtered = filter === 'all'
-                ? allListings
-                : allListings.filter(item => item.game === filter);
-
+            const filtered = filter === 'all' ? allListings : allListings.filter(item => item.game === filter);
             loading.classList.add('hidden');
-
             if (filtered.length === 0) {
                 grid.classList.add('hidden');
                 empty.classList.remove('hidden');
                 return;
             }
-
             empty.classList.add('hidden');
             grid.classList.remove('hidden');
-
             grid.innerHTML = filtered.map(card => `
                 <div class="glass rounded-lg overflow-hidden card-hover group border border-white/5 hover:border-white/20">
                     <div class="relative aspect-[3/4] overflow-hidden bg-gradient-to-b from-gray-800 to-black">
@@ -529,7 +680,7 @@
             if (typeof lucide !== "undefined") lucide.createIcons();
         }
 
-        // ─── Cart ─────────────────────────────────────────────────────────────────
+        // ─── Cart ───────────────────────────────────────────────────────────────────
         function addToCart(id) {
             const item = allListings.find(i => i.id === id);
             if (!item) return;
@@ -593,7 +744,7 @@
             }
         }
 
-        // ─── Event listeners ──────────────────────────────────────────────────────
+        // ─── Event listeners ────────────────────────────────────────────────────────
         document.getElementById('cartBtn').addEventListener('click', toggleCart);
         document.getElementById('mobileMenuBtn').addEventListener('click', () => {
             document.getElementById('mobileMenu').classList.toggle('hidden');
@@ -621,37 +772,31 @@
             });
         });
 
-        // ─── Twitch status ────────────────────────────────────────────────────────
-        // ─── Twitch Player API ────────────────────────────────────────────────────
+        // ─── Twitch Player ──────────────────────────────────────────────────────────
         let twitchPlayer = null;
         let streamStartTime = null;
         let uptimeInterval = null;
 
         function initTwitchPlayer() {
             twitchPlayer = new Twitch.Player('twitch-embed', {
-                channel: 'daddintong77',
+                channel: 'daddington77',
                 parent: ['daddington77.github.io'],
                 width: '100%',
                 height: '100%',
                 autoplay: false,
                 muted: false,
             });
-
             twitchPlayer.addEventListener(Twitch.Player.ONLINE, () => {
                 streamStartTime = new Date();
                 setLiveStatus(true);
                 startUptimeClock();
             });
-
             twitchPlayer.addEventListener(Twitch.Player.OFFLINE, () => {
                 streamStartTime = null;
                 setLiveStatus(false);
                 stopUptimeClock();
             });
-
             twitchPlayer.addEventListener(Twitch.Player.READY, () => {
-                // Let ONLINE/OFFLINE events handle status — start as offline by default
-                // ONLINE will fire and override this if the channel is live
                 setLiveStatus(false);
             });
         }
@@ -665,10 +810,9 @@
             const meta        = document.getElementById('stream-meta');
             const infoBar     = document.getElementById('stream-info-bar');
             const offlineMsg  = document.getElementById('stream-offline-msg');
-
             if (isLive) {
                 heroBadge.className = 'inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-green-500/20 border border-green-500/50 text-green-400 font-semibold live-pulse';
-                heroBadge.innerHTML = '<span class="w-2 h-2 bg-green-500 rounded-full"></span><span class="text-sm tracking-wider" id="hero-live-text">🔴 LIVE NOW</span>';
+                heroBadge.innerHTML = '<span class="w-2 h-2 bg-green-500 rounded-full"></span><span class="text-sm tracking-wider">🔴 LIVE NOW</span>';
                 heroStats.classList.remove('hidden');
                 dot.className = 'w-3 h-3 bg-red-500 rounded-full live-pulse';
                 heading.textContent = 'LIVE BREAK';
@@ -708,10 +852,67 @@
             if (uptimeInterval) { clearInterval(uptimeInterval); uptimeInterval = null; }
         }
 
+        // ─── SUCCESS MODAL ──────────────────────────────────────────────────────────
+        const CONFETTI_COLORS = ['#00f3ff', '#bc13fe', '#39ff14', '#ff006e', '#ffd700', '#ff6b35'];
 
-        // ─── Stripe Embedded Checkout ─────────────────────────────────────────────
+        function spawnConfetti() {
+            const container = document.getElementById('confettiContainer');
+            container.innerHTML = '';
+            for (let i = 0; i < 55; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'confetti-piece';
+                const size = Math.random() * 8 + 5;
+                piece.style.cssText = `
+                    left: ${Math.random() * 100}%;
+                    top: ${-size}px;
+                    width: ${size}px;
+                    height: ${size}px;
+                    background: ${CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]};
+                    border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+                    animation-delay: ${Math.random() * 0.8}s;
+                    animation-duration: ${1.2 + Math.random() * 0.8}s;
+                    opacity: ${0.7 + Math.random() * 0.3};
+                `;
+                container.appendChild(piece);
+            }
+            // Clean up after animations finish
+            setTimeout(() => { container.innerHTML = ''; }, 3000);
+        }
+
+        function openSuccessModal(orderItems) {
+            // Populate order summary
+            const summary = document.getElementById('successOrderSummary');
+            summary.innerHTML = orderItems.map(item => `
+                <div class="flex items-center gap-3 py-1.5">
+                    <img src="${item.image}" class="w-10 h-10 object-cover rounded-lg flex-shrink-0"
+                         onerror="this.src='https://placehold.co/40x40/1a1a2e/ffffff?text=?'">
+                    <span class="flex-1 text-sm text-gray-200 text-left truncate">${item.name}</span>
+                    <span class="text-cyan-400 font-bold text-sm font-orbitron">$${item.price.toLocaleString()}</span>
+                </div>
+            `).join('');
+
+            const total = orderItems.reduce((s, i) => s + i.price, 0);
+            document.getElementById('successTotal').textContent = '$' + total.toLocaleString();
+
+            const modal = document.getElementById('successModal');
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+
+            if (typeof lucide !== "undefined") lucide.createIcons();
+
+            // Spawn confetti after card pops in
+            setTimeout(spawnConfetti, 300);
+        }
+
+        function closeSuccessModal() {
+            const modal = document.getElementById('successModal');
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // ─── Stripe Checkout ────────────────────────────────────────────────────────
         const WORKER_URL = 'https://dadcheckout.juggaloateyourdog.workers.dev';
-        const STRIPE_PUBLISHABLE_KEY = 'pk_test_51T6NVrF6q8EP5oFgysCPo03PCwS70bSHIA70eW17ajgfj2PK32Tny1TnbFKkjaQQJO2fTVr1uwvBvX5Id3WS17V200Fn0m5elu'; // ← replace with his pk_ key
+        const STRIPE_PUBLISHABLE_KEY = 'pk_test_51T6NVrF6q8EP5oFgysCPo03PCwS70bSHIA70eW17ajgfj2PK32Tny1TnbFKkjaQQJO2fTVr1uwvBvX5Id3WS17V200Fn0m5elu';
 
         let stripe = null;
         let elements = null;
@@ -721,12 +922,22 @@
             if (!stripe) stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
         }
 
+        function resetCheckoutBtn() {
+            const btn     = document.getElementById('checkoutBtn');
+            const btnText = document.getElementById('checkoutBtnText');
+            const spinner = document.getElementById('checkoutSpinner');
+            btn.disabled = false;
+            btnText.textContent = 'CHECKOUT';
+            spinner.classList.add('hidden');
+            btn.style.background = '';
+        }
+
         async function startCheckout() {
             if (cart.length === 0) return;
 
             initStripe();
 
-            const btn = document.getElementById('checkoutBtn');
+            const btn     = document.getElementById('checkoutBtn');
             const btnText = document.getElementById('checkoutBtnText');
             const spinner = document.getElementById('checkoutSpinner');
 
@@ -735,7 +946,6 @@
             spinner.classList.remove('hidden');
 
             try {
-                // Ask Worker to create a PaymentIntent
                 const resp = await fetch(`${WORKER_URL}/create-payment-intent`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -748,7 +958,6 @@
                     throw new Error(data.error || 'Could not start checkout');
                 }
 
-                // Mount Stripe Elements into the modal
                 elements = stripe.elements({
                     clientSecret: data.clientSecret,
                     appearance: {
@@ -764,7 +973,6 @@
                     },
                 });
 
-                // Remove loading spinner from mount point
                 document.getElementById('stripeLoading').style.display = 'none';
 
                 paymentElement = elements.create('payment', {
@@ -773,41 +981,41 @@
                 });
                 paymentElement.mount('#payment-element');
 
-                // Enable pay button once Stripe element is ready
                 paymentElement.on('ready', () => {
                     const payBtn = document.getElementById('payNowBtn');
                     payBtn.disabled = false;
                     payBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                 });
 
-                // Update modal total
                 const total = cart.reduce((s, i) => s + i.price, 0);
                 document.getElementById('paymentTotal').textContent = '$' + total.toLocaleString();
 
-                // Show modal
+                // Snapshot cart before opening modal (used for success screen)
+                lastOrderItems = [...cart];
+
                 openPaymentModal();
 
             } catch (err) {
                 console.error('Checkout error:', err);
                 const errMsg = err.message || 'Something went wrong';
                 btnText.textContent = '✕ ' + errMsg;
-                spinner.classList.add('hidden');
-                btn.disabled = false;
                 btn.style.background = 'linear-gradient(to right, #ef4444, #dc2626)';
-                setTimeout(() => {
-                    btnText.textContent = 'CHECKOUT';
-                    btn.style.background = '';
-                }, 4000);
+                setTimeout(resetCheckoutBtn, 4000);
+                return; // early exit so finally doesn't immediately reset
+            } finally {
+                // Always re-enable button + hide spinner (on success path too)
+                // Small delay so the user sees "LOADING..." transition to modal
+                setTimeout(resetCheckoutBtn, 400);
             }
         }
 
         async function submitPayment() {
             if (!stripe || !elements) return;
 
-            const btn = document.getElementById('payNowBtn');
+            const btn     = document.getElementById('payNowBtn');
             const btnText = document.getElementById('payNowText');
             const spinner = document.getElementById('payNowSpinner');
-            const msg = document.getElementById('payment-message');
+            const msg     = document.getElementById('payment-message');
 
             btn.disabled = true;
             btnText.textContent = 'PROCESSING...';
@@ -823,17 +1031,24 @@
             });
 
             if (error) {
+                // ── Payment failed ──
                 msg.textContent = error.message;
                 msg.classList.remove('hidden');
                 btn.disabled = false;
                 btnText.textContent = 'PAY NOW';
                 spinner.classList.add('hidden');
             } else {
-                // Payment succeeded without redirect (e.g. card)
+                // ── Payment succeeded (no redirect needed) ──
                 closePaymentModal();
+
+                // Capture order snapshot, clear the live cart
+                const orderSnapshot = [...lastOrderItems];
                 cart = [];
+                lastOrderItems = [];
                 updateCart();
-                window.location.href = '/success.html';
+
+                // Show success modal
+                openSuccessModal(orderSnapshot);
             }
         }
 
@@ -846,27 +1061,28 @@
 
         function closePaymentModal() {
             document.getElementById('paymentModal').classList.add('hidden');
-            // Reset payment element
             if (paymentElement) {
                 paymentElement.unmount();
                 paymentElement = null;
                 elements = null;
             }
-            document.getElementById('stripeLoading').style.display = 'flex';
-            document.getElementById('payment-element').innerHTML = '<div id="stripeLoading" class="flex flex-col items-center justify-center py-12 text-gray-400 gap-3"><div class="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div><span class="text-sm">Loading payment form...</span></div>';
+            // Reset Stripe mount point
+            document.getElementById('payment-element').innerHTML =
+                '<div id="stripeLoading" class="flex flex-col items-center justify-center py-12 text-gray-400 gap-3">' +
+                '<div class="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>' +
+                '<span class="text-sm">Loading payment form...</span></div>';
             document.getElementById('payment-message').classList.add('hidden');
             const payBtn = document.getElementById('payNowBtn');
             payBtn.disabled = true;
             payBtn.classList.add('opacity-50', 'cursor-not-allowed');
             document.getElementById('payNowText').textContent = 'PAY NOW';
+            document.getElementById('payNowSpinner').classList.add('hidden');
         }
 
-        // Close modal on overlay click
         document.getElementById('paymentOverlay').addEventListener('click', closePaymentModal);
 
-        // ─── Init ─────────────────────────────────────────────────────────────────
+        // ─── Init ───────────────────────────────────────────────────────────────────
         loadListings();
-        // Twitch Player API is loaded via script tag below
     </script>
     <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js" onload="lucide.createIcons()"></script>
     <script src="https://player.twitch.tv/js/embed/v1.js" onload="initTwitchPlayer()"></script>
