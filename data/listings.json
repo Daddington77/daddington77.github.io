@@ -1,0 +1,85 @@
+{
+  "_instructions": {
+    "how_to_add": "Copy any item block from the 'listings' array below, paste it, change the values, save.",
+    "how_to_remove": "Delete the entire { } block for that item. Make sure commas between items stay correct.",
+    "games": "Must be exactly one of: pokemon, magic, yugioh",
+    "condition": "Must be exactly one of: NM, LP, MP, HP",
+    "image": "Put your image file in the data/images/ folder in this repo, then set image to 'data/images/yourfilename.jpg'",
+    "stock": "Set to 0 to hide the item from the store automatically",
+    "id": "Must be a unique number. Just increment from the last one."
+  },
+  "listings": [
+    {
+      "id": 1,
+      "name": "Pikachu Illustrator",
+      "game": "pokemon",
+      "condition": "NM",
+      "price": 1200,
+      "stock": 1,
+      "image": "data/images/pikachu-illustrator.jpg"
+    },
+    {
+      "id": 2,
+      "name": "Mox Emerald",
+      "game": "magic",
+      "condition": "LP",
+      "price": 2800,
+      "stock": 1,
+      "image": "data/images/mox-emerald.jpg"
+    },
+    {
+      "id": 3,
+      "name": "Dark Magician",
+      "game": "yugioh",
+      "condition": "NM",
+      "price": 150,
+      "stock": 3,
+      "image": "data/images/dark-magician.jpg"
+    },
+    {
+      "id": 4,
+      "name": "Blastoise Base Set",
+      "game": "pokemon",
+      "condition": "HP",
+      "price": 320,
+      "stock": 1,
+      "image": "data/images/blastoise.jpg"
+    },
+    {
+      "id": 5,
+      "name": "Time Walk",
+      "game": "magic",
+      "condition": "NM",
+      "price": 4500,
+      "stock": 1,
+      "image": "data/images/time-walk.jpg"
+    },
+    {
+      "id": 6,
+      "name": "Exodia Set",
+      "game": "yugioh",
+      "condition": "NM",
+      "price": 600,
+      "stock": 2,
+      "image": "data/images/exodia.jpg"
+    },
+    {
+      "id": 7,
+      "name": "Venusaur",
+      "game": "pokemon",
+      "condition": "MP",
+      "price": 180,
+      "stock": 1,
+      "image": "data/images/venusaur.jpg"
+    },
+    {
+      "id": 8,
+      "name": "Ancestral Recall",
+      "game": "magic",
+      "condition": "NM",
+      "price": 5200,
+      "stock": 1,
+      "image": "data/images/ancestral-recall.jpg"
+    }
+  ]
+}
