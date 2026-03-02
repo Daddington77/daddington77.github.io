@@ -779,6 +779,14 @@
                     payBtn.disabled = false;
                     payBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                 });
+                // Fallback — enable after 3 seconds in case ready event misfires
+                setTimeout(() => {
+                    const payBtn = document.getElementById('payNowBtn');
+                    if (payBtn && payBtn.disabled) {
+                        payBtn.disabled = false;
+                        payBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    }
+                }, 3000);
 
                 // Update modal total
                 const total = cart.reduce((s, i) => s + i.price, 0);
