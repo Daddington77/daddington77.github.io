@@ -170,7 +170,7 @@
 
             <!-- Twitch embed — always visible, shows live or offline automatically -->
             <div class="glass rounded-2xl overflow-hidden border border-white/10" style="aspect-ratio: 16/9;">
-                <iframe src="https://player.twitch.tv/?channel=templetaps&parent=daddington77.github.io" frameborder="0" allowfullscreen="true" scrolling="no" height="100%" width="100%"></iframe>
+                <div id="twitch-embed" style="width:100%;height:100%;"></div>
             </div>
 
             <!-- Stream info bar — shown when live -->
@@ -622,16 +622,45 @@
         });
 
         // ─── Twitch status ────────────────────────────────────────────────────────
-        function formatUptime(startedAt) {
-            const diff = Math.floor((new Date() - new Date(startedAt)) / 1000);
-            const hours = Math.floor(diff / 3600);
-            const minutes = Math.floor((diff % 3600) / 60);
-            return hours > 0 ? `Stream Started ${hours}h ${minutes}m ago` : `Stream Started ${minutes}m ago`;
+        // ─── Twitch Player API ────────────────────────────────────────────────────
+        let twitchPlayer = null;
+        let streamStartTime = null;
+        let uptimeInterval = null;
+
+        function initTwitchPlayer() {
+            twitchPlayer = new Twitch.Player('twitch-embed', {
+                channel: 'templetaps',
+                parent: ['daddington77.github.io'],
+                width: '100%',
+                height: '100%',
+                autoplay: false,
+                muted: false,
+            });
+
+            twitchPlayer.addEventListener(Twitch.Player.ONLINE, () => {
+                streamStartTime = new Date();
+                setLiveStatus(true);
+                startUptimeClock();
+            });
+
+            twitchPlayer.addEventListener(Twitch.Player.OFFLINE, () => {
+                streamStartTime = null;
+                setLiveStatus(false);
+                stopUptimeClock();
+            });
+
+            twitchPlayer.addEventListener(Twitch.Player.READY, () => {
+                // Check initial state once player is ready
+                // The ONLINE/OFFLINE events will fire shortly after if live
+                setTimeout(() => {
+                    if (twitchPlayer.isPaused && !twitchPlayer.getChannel) return;
+                    // Default to offline until ONLINE event fires
+                    setLiveStatus(false);
+                }, 2000);
+            });
         }
-        function formatViewerCount(count) {
-            return count >= 1000 ? (count / 1000).toFixed(1).replace(/\.0$/, '') + 'K Viewers' : count.toLocaleString() + ' Viewers';
-        }
-        function updateTwitchStatus(data) {
+
+        function setLiveStatus(isLive) {
             const heroBadge   = document.getElementById('hero-live-badge');
             const heroStats   = document.getElementById('hero-stats');
             const navLiveLink = document.querySelector('a[href="#live"]');
@@ -641,17 +670,10 @@
             const infoBar     = document.getElementById('stream-info-bar');
             const offlineMsg  = document.getElementById('stream-offline-msg');
 
-            if (data.is_live) {
-                // Hero badge
+            if (isLive) {
                 heroBadge.className = 'inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-green-500/20 border border-green-500/50 text-green-400 font-semibold live-pulse';
                 heroBadge.innerHTML = '<span class="w-2 h-2 bg-green-500 rounded-full"></span><span class="text-sm tracking-wider">LIVE NOW - RIPPING PACKS</span>';
-
-                // Hero stats
                 heroStats.classList.remove('hidden');
-                document.getElementById('hero-viewer-count').textContent = formatViewerCount(data.viewer_count);
-                document.getElementById('hero-game-name').textContent = data.game_name || '';
-
-                // Stream section
                 dot.className = 'w-3 h-3 bg-red-500 rounded-full live-pulse';
                 heading.textContent = 'LIVE BREAK';
                 meta.classList.remove('hidden');
@@ -659,42 +681,35 @@
                 infoBar.classList.remove('hidden');
                 infoBar.style.display = 'flex';
                 offlineMsg.classList.add('hidden');
-
-                document.getElementById('stream-uptime').textContent = formatUptime(data.started_at);
-                document.getElementById('stream-title').textContent = data.title || 'Live Stream';
-                document.getElementById('stream-game').textContent = data.game_name || '';
-                document.getElementById('stream-viewers').textContent = data.viewer_count.toLocaleString() + ' viewers';
-
-                // Nav
-                if (navLiveLink) { navLiveLink.textContent = 'LIVE NOW'; navLiveLink.classList.add('text-green-400'); }
+                if (navLiveLink) navLiveLink.classList.add('text-green-400');
             } else {
-                // Hero badge
                 heroBadge.className = 'inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-gray-500/20 border border-gray-500/50 text-gray-400 font-semibold';
                 heroBadge.innerHTML = '<span class="w-2 h-2 bg-gray-500 rounded-full"></span><span class="text-sm tracking-wider">STREAM OFFLINE</span>';
-
-                // Hero stats
                 heroStats.classList.add('hidden');
-
-                // Stream section
                 dot.className = 'w-3 h-3 bg-gray-500 rounded-full';
                 heading.textContent = 'STREAM';
                 meta.classList.add('hidden');
                 infoBar.classList.add('hidden');
                 offlineMsg.classList.remove('hidden');
-
-                // Nav
-                if (navLiveLink) { navLiveLink.textContent = 'LIVE NOW'; navLiveLink.classList.remove('text-green-400'); }
+                if (navLiveLink) navLiveLink.classList.remove('text-green-400');
             }
             if (typeof lucide !== "undefined") lucide.createIcons();
         }
-        async function checkTwitchStatus() {
-            try {
-                const resp = await fetch('/data/twitch-status.json');
-                if (!resp.ok) throw new Error('not found');
-                updateTwitchStatus(await resp.json());
-            } catch {
-                updateTwitchStatus({ is_live: false });
-            }
+
+        function startUptimeClock() {
+            stopUptimeClock();
+            uptimeInterval = setInterval(() => {
+                if (!streamStartTime) return;
+                const diff = Math.floor((new Date() - streamStartTime) / 1000);
+                const hours = Math.floor(diff / 3600);
+                const minutes = Math.floor((diff % 3600) / 60);
+                const el = document.getElementById('stream-uptime');
+                if (el) el.textContent = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+            }, 10000);
+        }
+
+        function stopUptimeClock() {
+            if (uptimeInterval) { clearInterval(uptimeInterval); uptimeInterval = null; }
         }
 
         // ─── Stripe Embedded Checkout ─────────────────────────────────────────────
@@ -854,9 +869,9 @@
 
         // ─── Init ─────────────────────────────────────────────────────────────────
         loadListings();
-        checkTwitchStatus();
-        setInterval(checkTwitchStatus, 5 * 60 * 1000);
+        // Twitch Player API is loaded via script tag below
     </script>
     <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js" onload="lucide.createIcons()"></script>
+    <script src="https://player.twitch.tv/js/embed/v1.js" onload="initTwitchPlayer()"></script>
 </body>
 </html>
