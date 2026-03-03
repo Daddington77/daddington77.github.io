@@ -189,16 +189,16 @@
                 <div class="relative">
                     <div class="absolute inset-0 bg-gradient-to-r from-green-500 to-purple-500 rounded-3xl blur-3xl opacity-20 animate-pulse"></div>
                     <div class="relative glass rounded-3xl p-4 neon-border transform hover:rotate-1 transition-transform duration-500">
-                        <img src="http://static.photos/gaming/640x360/777" alt="Featured Card Pull" class="rounded-2xl w-full object-cover shadow-2xl">
+                        <img id="latestHitImage" src="http://static.photos/gaming/640x360/777" alt="Featured Card Pull" class="rounded-2xl w-full object-cover shadow-2xl">
                         <div class="absolute bottom-8 left-8 right-8 glass rounded-xl p-4 border border-white/20">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-sm text-gray-400">Just Pulled For Viewer</p>
-                                    <p class="text-xl font-bold text-green-400">Charizard VMAX Rainbow</p>
+                                    <p class="text-sm text-gray-400">Latest Hit</p>
+                                    <p id="latestHitCard" class="text-xl font-bold text-green-400">Charizard VMAX Rainbow</p>
                                 </div>
                                 <div class="text-right">
                                     <p class="text-sm text-gray-400">From Pack</p>
-                                    <p class="text-2xl font-bold text-purple-400">Obsidian Flames</p>
+                                    <p id="latestHitSet" class="text-2xl font-bold text-purple-400">Obsidian Flames</p>
                                 </div>
                             </div>
                         </div>
@@ -1181,6 +1181,20 @@
 
         // ─── Init ───────────────────────────────────────────────────────────────────
         loadListings();
+        loadLatestHit();
+
+        async function loadLatestHit() {
+            try {
+                const resp = await fetch('/data/latest-hit.json');
+                if (!resp.ok) return;
+                const data = await resp.json();
+                if (data.card) document.getElementById('latestHitCard').textContent = data.card;
+                if (data.set) document.getElementById('latestHitSet').textContent = data.set;
+                if (data.image) document.getElementById('latestHitImage').src = data.image;
+            } catch (err) {
+                console.warn('Could not load latest hit:', err);
+            }
+        }
     </script>
     <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js" onload="lucide.createIcons()"></script>
     <script src="https://player.twitch.tv/js/embed/v1.js" onload="initTwitchPlayer()"></script>
