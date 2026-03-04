@@ -110,29 +110,61 @@
             transform: translateY(0);
         }
 
-        /* ── Scroll arrow buttons ─────────────────────────────────────────────── */
-        /* Buttons sit as flex siblings flanking the card grid — no JS positioning needed */
+        /* ── Deck buttons ─────────────────────────────────────────────────────── */
         .row-nav-btn {
             flex-shrink: 0;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
+            position: relative;
+            width: 54px;
+            /* height is determined by the stacked card layers */
             display: flex;
-            align-items: center;
+            align-items: flex-end;
             justify-content: center;
-            transition: transform 0.15s ease, box-shadow 0.2s ease;
-            align-self: center;  /* vertically centre against the card grid */
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            align-self: center;
+            transition: filter 0.2s ease;
         }
-        .row-nav-btn:hover {
-            transform: scale(1.1);
+        .row-nav-btn:hover { filter: brightness(1.15); }
+        .row-nav-btn:hover .deck-top { transform: translateY(-4px) rotate(-1deg); }
+        .row-nav-btn.hidden-btn { visibility: hidden; pointer-events: none; }
+
+        /* Individual card layers in the deck */
+        .deck-card {
+            position: absolute;
+            width: 54px;
+            height: 76px;
+            border-radius: 5px;
+            border: 1px solid rgba(255,255,255,0.18);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+            overflow: hidden;
+            backface-visibility: hidden;
         }
-        .row-nav-btn:active {
-            transform: scale(0.92);
+        .deck-top {
+            position: relative;   /* top card is in-flow so button has natural height */
+            width: 54px;
+            height: 76px;
+            border-radius: 5px;
+            border: 1px solid rgba(255,255,255,0.25);
+            box-shadow: 0 3px 12px rgba(0,0,0,0.6);
+            overflow: hidden;
+            transition: transform 0.2s cubic-bezier(0.34,1.5,0.64,1);
+            z-index: 4;
         }
-        .row-nav-btn.hidden-btn {
-            visibility: hidden;
-            pointer-events: none;
+        /* Flick animation — top card launches off the deck */
+        @keyframes deckFlickLeft {
+            0%   { transform: translate(0,0) rotate(0deg) scale(1); opacity:1; }
+            60%  { transform: translate(-160px,-30px) rotate(-18deg) scale(0.85); opacity:0.7; }
+            100% { transform: translate(-300px,20px) rotate(-28deg) scale(0.6);  opacity:0; }
         }
+        @keyframes deckFlickRight {
+            0%   { transform: translate(0,0) rotate(0deg) scale(1); opacity:1; }
+            60%  { transform: translate(160px,-30px) rotate(18deg) scale(0.85); opacity:0.7; }
+            100% { transform: translate(300px,20px) rotate(28deg) scale(0.6);  opacity:0; }
+        }
+        .deck-flick-left  { animation: deckFlickLeft  0.38s cubic-bezier(0.4,0,0.8,1) forwards; }
+        .deck-flick-right { animation: deckFlickRight 0.38s cubic-bezier(0.4,0,0.8,1) forwards; }
     </style>
 </head>
 <body class="gradient-bg min-h-screen">
@@ -607,6 +639,168 @@
         }
 
         // ─── Render shop rows ───────────────────────────────────────────────────────
+        // ─── Card back SVG designs per category ────────────────────────────────────
+        function pokemonCardBackSVG() {
+            // Classic red/white Pokéball design
+            return `<svg viewBox="0 0 54 76" xmlns="http://www.w3.org/2000/svg" width="54" height="76">
+                <defs>
+                    <radialGradient id="pkBg" cx="50%" cy="40%" r="60%">
+                        <stop offset="0%" stop-color="#cc2200"/>
+                        <stop offset="100%" stop-color="#880000"/>
+                    </radialGradient>
+                    <radialGradient id="pkBall" cx="50%" cy="40%" r="55%">
+                        <stop offset="0%" stop-color="#ff4422"/>
+                        <stop offset="100%" stop-color="#cc1100"/>
+                    </radialGradient>
+                </defs>
+                <!-- Card bg -->
+                <rect width="54" height="76" rx="5" fill="url(#pkBg)"/>
+                <!-- Top half red -->
+                <rect x="3" y="3" width="48" height="33" rx="3" fill="url(#pkBall)"/>
+                <!-- Bottom half white -->
+                <rect x="3" y="40" width="48" height="33" rx="3" fill="#f0f0f0"/>
+                <!-- Center band -->
+                <rect x="3" y="34" width="48" height="8" fill="#222"/>
+                <!-- Pokéball outer ring -->
+                <circle cx="27" cy="38" r="9" fill="#333" stroke="#555" stroke-width="1"/>
+                <circle cx="27" cy="38" r="6" fill="#fff" stroke="#555" stroke-width="0.5"/>
+                <circle cx="27" cy="38" r="3" fill="#eee" stroke="#aaa" stroke-width="0.5"/>
+                <circle cx="27" cy="38" r="1.5" fill="#ccc"/>
+                <!-- Shine -->
+                <ellipse cx="18" cy="14" rx="6" ry="4" fill="rgba(255,255,255,0.12)" transform="rotate(-20 18 14)"/>
+                <!-- Border -->
+                <rect x="0.5" y="0.5" width="53" height="75" rx="5" fill="none" stroke="rgba(255,200,180,0.3)" stroke-width="1"/>
+            </svg>`;
+        }
+
+        function magicCardBackSVG() {
+            // Classic MTG card back — dark blue with the oval and geometric pattern
+            return `<svg viewBox="0 0 54 76" xmlns="http://www.w3.org/2000/svg" width="54" height="76">
+                <defs>
+                    <radialGradient id="mtgBg" cx="50%" cy="45%" r="65%">
+                        <stop offset="0%" stop-color="#1a3a6e"/>
+                        <stop offset="100%" stop-color="#0a1a40"/>
+                    </radialGradient>
+                    <radialGradient id="mtgOval" cx="50%" cy="45%" r="60%">
+                        <stop offset="0%" stop-color="#c8a044"/>
+                        <stop offset="60%" stop-color="#8b6914"/>
+                        <stop offset="100%" stop-color="#5a4208"/>
+                    </radialGradient>
+                </defs>
+                <!-- Background -->
+                <rect width="54" height="76" rx="5" fill="url(#mtgBg)"/>
+                <!-- Outer ornate border -->
+                <rect x="2" y="2" width="50" height="72" rx="4" fill="none" stroke="#c8a044" stroke-width="1.5"/>
+                <rect x="4" y="4" width="46" height="68" rx="3" fill="none" stroke="#8b6914" stroke-width="0.5"/>
+                <!-- Central oval -->
+                <ellipse cx="27" cy="38" rx="18" ry="25" fill="url(#mtgOval)" stroke="#c8a044" stroke-width="1.2"/>
+                <!-- Inner oval dark -->
+                <ellipse cx="27" cy="38" rx="14" ry="21" fill="#0d1e4a"/>
+                <!-- The classic MTG "Deckmaster" style central motif — simplified pentagram of colors -->
+                <polygon points="27,20 32,30 43,30 34,37 37,48 27,42 17,48 20,37 11,30 22,30"
+                         fill="none" stroke="#c8a044" stroke-width="0.8" stroke-linejoin="round"/>
+                <!-- Corner flourishes -->
+                <path d="M8,8 Q12,6 14,10" fill="none" stroke="#c8a044" stroke-width="0.8"/>
+                <path d="M46,8 Q42,6 40,10" fill="none" stroke="#c8a044" stroke-width="0.8"/>
+                <path d="M8,68 Q12,70 14,66" fill="none" stroke="#c8a044" stroke-width="0.8"/>
+                <path d="M46,68 Q42,70 40,66" fill="none" stroke="#c8a044" stroke-width="0.8"/>
+                <!-- Shine -->
+                <ellipse cx="16" cy="16" rx="7" ry="4" fill="rgba(200,160,68,0.08)" transform="rotate(-25 16 16)"/>
+            </svg>`;
+        }
+
+        function yugiohCardBackSVG() {
+            // Classic YGO card back — dark with Eye of Anubis
+            return `<svg viewBox="0 0 54 76" xmlns="http://www.w3.org/2000/svg" width="54" height="76">
+                <defs>
+                    <radialGradient id="ygoBg" cx="50%" cy="40%" r="65%">
+                        <stop offset="0%" stop-color="#2a1a5e"/>
+                        <stop offset="100%" stop-color="#100a2e"/>
+                    </radialGradient>
+                    <radialGradient id="ygoCenter" cx="50%" cy="50%" r="55%">
+                        <stop offset="0%" stop-color="#4a3090"/>
+                        <stop offset="100%" stop-color="#1a0a50"/>
+                    </radialGradient>
+                </defs>
+                <!-- Background -->
+                <rect width="54" height="76" rx="5" fill="url(#ygoBg)"/>
+                <!-- Outer border -->
+                <rect x="2" y="2" width="50" height="72" rx="4" fill="none" stroke="#7755cc" stroke-width="1.2"/>
+                <rect x="3.5" y="3.5" width="47" height="69" rx="3" fill="none" stroke="#553399" stroke-width="0.5"/>
+                <!-- Diamond grid pattern in background -->
+                <line x1="0" y1="19" x2="54" y2="19" stroke="rgba(119,85,204,0.12)" stroke-width="0.5"/>
+                <line x1="0" y1="38" x2="54" y2="38" stroke="rgba(119,85,204,0.12)" stroke-width="0.5"/>
+                <line x1="0" y1="57" x2="54" y2="57" stroke="rgba(119,85,204,0.12)" stroke-width="0.5"/>
+                <line x1="13" y1="0" x2="13" y2="76" stroke="rgba(119,85,204,0.12)" stroke-width="0.5"/>
+                <line x1="27" y1="0" x2="27" y2="76" stroke="rgba(119,85,204,0.12)" stroke-width="0.5"/>
+                <line x1="41" y1="0" x2="41" y2="76" stroke="rgba(119,85,204,0.12)" stroke-width="0.5"/>
+                <!-- Central circle -->
+                <circle cx="27" cy="38" r="18" fill="url(#ygoCenter)" stroke="#7755cc" stroke-width="1"/>
+                <!-- Eye of Anubis — simplified iconic version -->
+                <!-- Eye whites -->
+                <ellipse cx="27" cy="36" rx="10" ry="6" fill="#e8d890"/>
+                <!-- Iris -->
+                <ellipse cx="27" cy="36" rx="6" ry="5" fill="#c8a020"/>
+                <!-- Pupil -->
+                <ellipse cx="27" cy="36" rx="3" ry="4" fill="#1a0a30"/>
+                <!-- Eye shine -->
+                <ellipse cx="25" cy="34.5" rx="1.2" ry="1" fill="rgba(255,255,255,0.7)"/>
+                <!-- Upper eyelid line -->
+                <path d="M17,36 Q27,28 37,36" fill="none" stroke="#8b6600" stroke-width="1" stroke-linecap="round"/>
+                <!-- Lower kohl lines (Anubis markings) -->
+                <path d="M23,40 L20,46" stroke="#c8a020" stroke-width="0.9" stroke-linecap="round"/>
+                <path d="M31,40 L34,46" stroke="#c8a020" stroke-width="0.9" stroke-linecap="round"/>
+                <!-- Ankh below -->
+                <line x1="27" y1="50" x2="27" y2="58" stroke="#7755cc" stroke-width="1"/>
+                <line x1="23" y1="53" x2="31" y2="53" stroke="#7755cc" stroke-width="1"/>
+                <ellipse cx="27" cy="50.5" rx="2.5" ry="3" fill="none" stroke="#7755cc" stroke-width="1"/>
+                <!-- Corner stars -->
+                <circle cx="9"  cy="9"  r="1.5" fill="#7755cc" opacity="0.8"/>
+                <circle cx="45" cy="9"  r="1.5" fill="#7755cc" opacity="0.8"/>
+                <circle cx="9"  cy="67" r="1.5" fill="#7755cc" opacity="0.8"/>
+                <circle cx="45" cy="67" r="1.5" fill="#7755cc" opacity="0.8"/>
+            </svg>`;
+        }
+
+        const CARD_BACK_FN = {
+            pokemon: pokemonCardBackSVG,
+            magic:   magicCardBackSVG,
+            yugioh:  yugiohCardBackSVG,
+        };
+
+        // Build the deck HTML — 3 stacked card layers + top card
+        function deckButtonHTML(cat, dir, btnVisibility, meta) {
+            const backFn   = CARD_BACK_FN[cat] || magicCardBackSVG;
+            const flickDir = dir === -1 ? 'left' : 'right';
+            const label    = dir === -1 ? 'Previous' : 'Next';
+            // Offset each layer slightly so they look stacked
+            // Layer 0 = bottom, layer 2 = just under top, top = top card
+            return `
+            <button id="btn-${dir === -1 ? 'left' : 'right'}-${cat}"
+                    onclick="scrollRow('${cat}', ${dir})"
+                    class="row-nav-btn"
+                    data-flick-dir="${flickDir}"
+                    aria-label="${label}"
+                    style="${btnVisibility}">
+                <!-- Bottom layer -->
+                <div class="deck-card" style="bottom:4px; left:50%; transform:translateX(-50%) rotate(-4deg) translateY(0); z-index:1; background:#111;">
+                    ${backFn()}
+                </div>
+                <!-- Middle layer -->
+                <div class="deck-card" style="bottom:2px; left:50%; transform:translateX(-50%) rotate(-2deg) translateY(0); z-index:2; background:#111;">
+                    ${backFn()}
+                </div>
+                <!-- Second-from-top -->
+                <div class="deck-card" style="bottom:0; left:50%; transform:translateX(-50%) rotate(-0.5deg) translateY(0); z-index:3; background:#111;">
+                    ${backFn()}
+                </div>
+                <!-- Top card (interactive, flicks off) -->
+                <div class="deck-top" style="background:#111;" data-deck-top>
+                    ${backFn()}
+                </div>
+            </button>`;
+        }
+
         const CATEGORY_META = {
             pokemon: { label: 'POKÉMON',  accent: 'from-yellow-400 to-red-500',   borderColor: 'rgba(234,179,8,0.5)',  glowColor: 'rgba(234,179,8,0.2)'  },
             magic:   { label: 'MAGIC',    accent: 'from-blue-400 to-purple-600',  borderColor: 'rgba(59,130,246,0.5)', glowColor: 'rgba(59,130,246,0.2)' },
@@ -696,14 +890,10 @@
                             This means they always sit exactly at the left/right edges of the card row
                             at every viewport size — no JS measurement needed.
                         -->
-                        <div class="relative z-10 flex items-center gap-3">
+                        <div class="relative z-10 flex items-center gap-4" style="align-items:center;">
 
-                            <!-- Left arrow -->
-                            <button id="btn-left-${cat}" onclick="scrollRow('${cat}', -1)"
-                                    class="row-nav-btn"
-                                    style="background: linear-gradient(135deg, rgba(10,10,20,0.95), rgba(20,10,40,0.95)); border: 1px solid ${meta.borderColor}; box-shadow: 0 0 16px ${meta.glowColor}, inset 0 1px 0 rgba(255,255,255,0.1); ${btnVisibility}">
-                                <i data-lucide="chevron-left" class="w-5 h-5" style="filter: drop-shadow(0 0 4px ${meta.borderColor});"></i>
-                            </button>
+                            <!-- Left deck button -->
+                            ${deckButtonHTML(cat, -1, btnVisibility, meta)}
 
                             <!-- Card grid — overflow:hidden clips cards during exit/enter animation -->
                             <div class="flex-1 overflow-hidden" style="padding:8px 0;margin:-8px 0;">
@@ -715,12 +905,8 @@
                                 ${initialItems.map(cardHTML).join('')}
                             </div></div>
 
-                            <!-- Right arrow -->
-                            <button id="btn-right-${cat}" onclick="scrollRow('${cat}', 1)"
-                                    class="row-nav-btn"
-                                    style="background: linear-gradient(135deg, rgba(10,10,20,0.95), rgba(20,10,40,0.95)); border: 1px solid ${meta.borderColor}; box-shadow: 0 0 16px ${meta.glowColor}, inset 0 1px 0 rgba(255,255,255,0.1); ${btnVisibility}">
-                                <i data-lucide="chevron-right" class="w-5 h-5" style="filter: drop-shadow(0 0 4px ${meta.borderColor});"></i>
-                            </button>
+                            <!-- Right deck button -->
+                            ${deckButtonHTML(cat, 1, btnVisibility, meta)}
 
                         </div>
 
@@ -854,6 +1040,34 @@
             }, delayMs);
         }
 
+        // ─── Deck flick helper — animates top card off the deck on click ──────────
+        function triggerDeckFlick(cat, dir) {
+            const btnId  = dir === 1 ? 'btn-right-' + cat : 'btn-left-' + cat;
+            const btn    = document.getElementById(btnId);
+            if (!btn) return;
+            const top = btn.querySelector('[data-deck-top]');
+            if (!top) return;
+
+            // Remove any previous flick class first
+            top.classList.remove('deck-flick-left', 'deck-flick-right');
+            // Force reflow so re-adding works
+            void top.offsetWidth;
+
+            const flickClass = dir === 1 ? 'deck-flick-right' : 'deck-flick-left';
+            top.classList.add(flickClass);
+
+            // After flick, snap back invisibly so it's ready for next click
+            setTimeout(function() {
+                top.classList.remove(flickClass);
+                top.style.opacity = '0';
+                top.style.transition = 'none';
+                top.style.transform = '';
+                void top.offsetWidth;
+                top.style.transition = 'opacity 0.25s ease';
+                top.style.opacity = '1';
+            }, 500);
+        }
+
         // ─── Scroll rows — card dealing animation ──────────────────────────────────
         var rowScrolling = {};
 
@@ -865,6 +1079,9 @@
             if (items.length <= PAGE_SIZE) return;
 
             rowScrolling[cat] = true;
+
+            // Flick the top card off the deck button
+            triggerDeckFlick(cat, dir);
 
             const current = parseInt(el.dataset.offset || '0');
             const next    = ((current + dir) % items.length + items.length) % items.length;
