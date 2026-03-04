@@ -60,7 +60,7 @@
       "game": "pokemon",
       "condition": "NM",
       "price": 420,
-      "stock": 1,
+      "stock": 0,
       "image": ""
     },
     {
@@ -132,7 +132,7 @@
       "game": "magic",
       "condition": "NM",
       "price": 420,
-      "stock": 1,
+      "stock": 0,
       "image": ""
     },
     {
@@ -205,6 +205,15 @@
       "condition": "NM",
       "price": 420,
       "stock": 1,
+      "image": ""
+    },
+    {
+      "id": 38,
+      "name": "BongMan",
+      "game": "magic",
+      "condition": "NM",
+      "price": 69,
+      "stock": 3,
       "image": ""
     }
   ]
