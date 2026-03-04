@@ -735,72 +735,121 @@
             if (typeof lucide !== "undefined") lucide.createIcons();
         }
 
-        // ─── Web Audio — crisp card flick (thwip) ──────────────────────────────────
+        // ─── Web Audio — card deal sound ───────────────────────────────────────────
         let _audioCtx = null;
         function getAudioCtx() {
             if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            // Resume if suspended (browser autoplay policy)
+            if (_audioCtx.state === 'suspended') _audioCtx.resume();
             return _audioCtx;
         }
 
         function playCardFlick(delayMs) {
-            // Synthesise a short "thwip" — noise burst shaped like a card snap
             setTimeout(function() {
                 try {
-                    const ctx    = getAudioCtx();
-                    const now    = ctx.currentTime;
-                    const dur    = 0.055; // seconds — short and snappy
+                    const ctx = getAudioCtx();
+                    const now = ctx.currentTime;
 
-                    // White noise buffer
-                    const bufLen = Math.ceil(ctx.sampleRate * dur);
-                    const buf    = ctx.createBuffer(1, bufLen, ctx.sampleRate);
-                    const data   = buf.getChannelData(0);
-                    for (let i = 0; i < bufLen; i++) {
-                        data[i] = (Math.random() * 2 - 1);
+                    // ── Master output gain (keep overall level gentle) ──────────
+                    const master = ctx.createGain();
+                    master.gain.value = 0.55;
+                    master.connect(ctx.destination);
+
+                    // ── 1. SWOOSH — filtered noise that sweeps from high to low ─
+                    // This is the airy "fwip" of the card travelling through the air
+                    const swooshLen  = Math.ceil(ctx.sampleRate * 0.18);
+                    const swooshBuf  = ctx.createBuffer(1, swooshLen, ctx.sampleRate);
+                    const swooshData = swooshBuf.getChannelData(0);
+                    for (let i = 0; i < swooshLen; i++) {
+                        swooshData[i] = Math.random() * 2 - 1;
                     }
+                    const swooshSrc = ctx.createBufferSource();
+                    swooshSrc.buffer = swooshBuf;
+                    swooshSrc.playbackRate.value = 1.0;
 
-                    const noise  = ctx.createBufferSource();
-                    noise.buffer = buf;
+                    // Band-pass sweeping down — card whoosh lives around 800–2000 Hz
+                    const swooshBP = ctx.createBiquadFilter();
+                    swooshBP.type  = 'bandpass';
+                    swooshBP.frequency.setValueAtTime(2200, now);
+                    swooshBP.frequency.exponentialRampToValueAtTime(600, now + 0.16);
+                    swooshBP.Q.value = 1.8;
 
-                    // Band-pass — card "thwip" lives around 2–6 kHz
-                    const bp     = ctx.createBiquadFilter();
-                    bp.type      = 'bandpass';
-                    bp.frequency.setValueAtTime(3800, now);
-                    bp.frequency.linearRampToValueAtTime(1200, now + dur);
-                    bp.Q.value   = 0.9;
+                    // Low-pass to keep it soft, not harsh
+                    const swooshLP = ctx.createBiquadFilter();
+                    swooshLP.type  = 'lowpass';
+                    swooshLP.frequency.value = 3500;
 
-                    // High-pass to cut low rumble
-                    const hp     = ctx.createBiquadFilter();
-                    hp.type      = 'highpass';
-                    hp.frequency.value = 900;
+                    // Envelope: quick rise, smooth decay — the swoosh arc
+                    const swooshGain = ctx.createGain();
+                    swooshGain.gain.setValueAtTime(0,    now);
+                    swooshGain.gain.linearRampToValueAtTime(0.6,  now + 0.012);
+                    swooshGain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
 
-                    // Amplitude envelope — sharp attack, fast decay
-                    const gain   = ctx.createGain();
-                    gain.gain.setValueAtTime(0,    now);
-                    gain.gain.linearRampToValueAtTime(0.32, now + 0.003);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+                    swooshSrc.connect(swooshBP);
+                    swooshBP.connect(swooshLP);
+                    swooshLP.connect(swooshGain);
+                    swooshGain.connect(master);
+                    swooshSrc.start(now);
+                    swooshSrc.stop(now + 0.18);
 
-                    // A tiny pitch-down "thock" tone underneath for body
-                    const osc    = ctx.createOscillator();
-                    osc.type     = 'triangle';
-                    osc.frequency.setValueAtTime(420, now);
-                    osc.frequency.exponentialRampToValueAtTime(180, now + 0.04);
-                    const ogain  = ctx.createGain();
-                    ogain.gain.setValueAtTime(0,    now);
-                    ogain.gain.linearRampToValueAtTime(0.18, now + 0.004);
-                    ogain.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
+                    // ── 2. THUD — the papery landing impact ──────────────────────
+                    // Short noise burst shaped to sound like card hitting table
+                    const thudDelay  = 0.10; // lands slightly into the swoosh
+                    const thudLen    = Math.ceil(ctx.sampleRate * 0.07);
+                    const thudBuf    = ctx.createBuffer(1, thudLen, ctx.sampleRate);
+                    const thudData   = thudBuf.getChannelData(0);
+                    for (let i = 0; i < thudLen; i++) {
+                        // Slightly softer noise — more papery
+                        thudData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (thudLen * 0.3));
+                    }
+                    const thudSrc = ctx.createBufferSource();
+                    thudSrc.buffer = thudBuf;
 
-                    noise.connect(bp);
-                    bp.connect(hp);
-                    hp.connect(gain);
-                    gain.connect(ctx.destination);
+                    // Low-mid band — the "thwack" of card on felt/table
+                    const thudBP = ctx.createBiquadFilter();
+                    thudBP.type  = 'bandpass';
+                    thudBP.frequency.setValueAtTime(900, now + thudDelay);
+                    thudBP.frequency.exponentialRampToValueAtTime(300, now + thudDelay + 0.06);
+                    thudBP.Q.value = 1.2;
 
-                    osc.connect(ogain);
-                    ogain.connect(ctx.destination);
+                    const thudGain = ctx.createGain();
+                    thudGain.gain.setValueAtTime(0,    now + thudDelay);
+                    thudGain.gain.linearRampToValueAtTime(0.9,  now + thudDelay + 0.004);
+                    thudGain.gain.exponentialRampToValueAtTime(0.001, now + thudDelay + 0.065);
 
-                    noise.start(now);
-                    noise.stop(now + dur);
-                    osc.start(now);
-                    osc.stop(now + 0.05);
+                    thudSrc.connect(thudBP);
+                    thudBP.connect(thudGain);
+                    thudGain.connect(master);
+                    thudSrc.start(now + thudDelay);
+                    thudSrc.stop(now + thudDelay + 0.07);
+
+                    // ── 3. PAPER RATTLE — tiny high-freq flutter at landing ──────
+                    // The papery flutter you hear as the card settles
+                    const rattleDelay = 0.105;
+                    const rattleLen   = Math.ceil(ctx.sampleRate * 0.04);
+                    const rattleBuf   = ctx.createBuffer(1, rattleLen, ctx.sampleRate);
+                    const rattleData  = rattleBuf.getChannelData(0);
+                    for (let i = 0; i < rattleLen; i++) {
+                        rattleData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (rattleLen * 0.2));
+                    }
+                    const rattleSrc = ctx.createBufferSource();
+                    rattleSrc.buffer = rattleBuf;
+
+                    const rattleHP = ctx.createBiquadFilter();
+                    rattleHP.type  = 'highpass';
+                    rattleHP.frequency.value = 4000;
+
+                    const rattleGain = ctx.createGain();
+                    rattleGain.gain.setValueAtTime(0,    now + rattleDelay);
+                    rattleGain.gain.linearRampToValueAtTime(0.25, now + rattleDelay + 0.003);
+                    rattleGain.gain.exponentialRampToValueAtTime(0.001, now + rattleDelay + 0.038);
+
+                    rattleSrc.connect(rattleHP);
+                    rattleHP.connect(rattleGain);
+                    rattleGain.connect(master);
+                    rattleSrc.start(now + rattleDelay);
+                    rattleSrc.stop(now + rattleDelay + 0.04);
+
                 } catch(e) { /* audio not available — silently skip */ }
             }, delayMs);
         }
@@ -863,7 +912,7 @@
                 card.style.zIndex = snapOrder; // closer cards stack on top as they arrive
 
                 setTimeout(function() {
-                    // Play the snap-back flick sound
+                    // Soft fwip as card snaps back to deck
                     playCardFlick(0);
 
                     card.style.transition =
@@ -931,8 +980,8 @@
                     const delay     = dealOrder * DEAL_STAGGER;
 
                     setTimeout(function() {
-                        // Play the deal flick sound as each card lands
-                        playCardFlick(DEAL_DUR * 0.55); // sound hits at peak of arc
+                        // Sound fires as the card decelerates into its landing position
+                        playCardFlick(Math.round(DEAL_DUR * 0.72));
 
                         card.style.transition =
                             'transform ' + DEAL_DUR + 'ms cubic-bezier(0.22,1.4,0.58,1), ' +
