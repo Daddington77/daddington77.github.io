@@ -11,7 +11,7 @@
   "listings": [
     {
       "id": 15,
-      "name": "TEMP",
+      "name": "1",
       "game": "magic",
       "condition": "NM",
       "price": 420,
@@ -20,7 +20,7 @@
     },
     {
       "id": 16,
-      "name": "TEMP",
+      "name": "2",
       "game": "magic",
       "condition": "NM",
       "price": 420,
@@ -128,7 +128,7 @@
     },
     {
       "id": 29,
-      "name": "TEMP",
+      "name": "3",
       "game": "magic",
       "condition": "NM",
       "price": 420,
@@ -137,7 +137,7 @@
     },
     {
       "id": 30,
-      "name": "TEMP",
+      "name": "4",
       "game": "magic",
       "condition": "NM",
       "price": 420,
@@ -146,7 +146,7 @@
     },
     {
       "id": 31,
-      "name": "TEMP",
+      "name": "5",
       "game": "magic",
       "condition": "NM",
       "price": 420,
@@ -155,7 +155,7 @@
     },
     {
       "id": 32,
-      "name": "TEMP",
+      "name": "6",
       "game": "magic",
       "condition": "NM",
       "price": 420,
@@ -164,7 +164,7 @@
     },
     {
       "id": 33,
-      "name": "TEMP",
+      "name": "7",
       "game": "magic",
       "condition": "NM",
       "price": 420,
@@ -173,7 +173,7 @@
     },
     {
       "id": 34,
-      "name": "TEMP",
+      "name": "8",
       "game": "magic",
       "condition": "NM",
       "price": 420,
@@ -182,7 +182,7 @@
     },
     {
       "id": 35,
-      "name": "TEMP",
+      "name": "9",
       "game": "magic",
       "condition": "NM",
       "price": 420,
@@ -191,7 +191,7 @@
     },
     {
       "id": 36,
-      "name": "TEMP",
+      "name": "10",
       "game": "magic",
       "condition": "NM",
       "price": 420,
@@ -200,7 +200,7 @@
     },
     {
       "id": 37,
-      "name": "TEMP",
+      "name": "11",
       "game": "magic",
       "condition": "NM",
       "price": 420,
