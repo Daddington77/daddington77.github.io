@@ -754,21 +754,10 @@
             if (typeof lucide !== "undefined") lucide.createIcons();
         }
 
-        function scrollRow(cat, dir) {
-            const el = document.getElementById('row-' + cat);
-            if (!el) return;
-            const items = allListings.filter(i => i.game === cat);
-            const visible = Math.min(items.length, 5);
-            var current = parseInt(el.dataset.offset || '0');
-            current = ((current + dir) % items.length + items.length) % items.length;
-            el.dataset.offset = current;
-            var reordered = [];
-            for (var i = 0; i < visible; i++) {
-                reordered.push(items[(current + i) % items.length]);
-            }
-            el.innerHTML = reordered.map(cardHTML).join('');
-            // Keep layout consistent with initial render
-            if (items.length < 5) {
+        var rowScrolling = {};
+
+        function applyRowLayout(el, itemCount) {
+            if (itemCount < 5) {
                 el.style.display = 'flex';
                 el.style.justifyContent = 'center';
                 el.style.gap = '20px';
@@ -779,15 +768,77 @@
                 el.style.gap = '20px';
                 el.style.justifyContent = '';
             }
+        }
+
+        function scrollRow(cat, dir) {
+            if (rowScrolling[cat]) return; // prevent rapid clicks mid-animation
+            const el = document.getElementById('row-' + cat);
+            if (!el) return;
+            const items = allListings.filter(i => i.game === cat);
+            const visible = Math.min(items.length, 5);
+            var current = parseInt(el.dataset.offset || '0');
+            var next = ((current + dir) % items.length + items.length) % items.length;
+
+            // Build incoming cards
+            var incoming = [];
+            for (var i = 0; i < visible; i++) {
+                incoming.push(items[(next + i) % items.length]);
+            }
+
+            // Create a ghost overlay for the outgoing cards
+            var ghost = document.createElement('div');
+            ghost.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5;';
+            ghost.innerHTML = el.innerHTML;
+            applyRowLayout(ghost, items.length);
+            ghost.style.transition = 'none';
+
+            var wrapper = el.parentElement;
+            wrapper.style.position = 'relative';
+            wrapper.style.overflow = 'hidden';
+            wrapper.appendChild(ghost);
+
+            // Slide ghost out
+            ghost.style.transition = 'transform 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.45s ease';
+            ghost.style.transform = 'translateX(0) scale(1)';
+            ghost.style.opacity = '1';
+
+            // Update real row but hide it, position it coming in from opposite side
+            el.innerHTML = incoming.map(cardHTML).join('');
+            el.dataset.offset = next;
+            applyRowLayout(el, items.length);
+            el.style.transition = 'none';
+            el.style.transform = 'translateX(' + (dir * -60) + 'px)';
             el.style.opacity = '0';
-            el.style.transform = 'translateX(' + (dir * 20) + 'px)';
-            setTimeout(function() {
-                el.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
-                el.style.opacity = '1';
-                el.style.transform = 'translateX(0)';
-                setTimeout(function() { el.style.transition = ''; }, 260);
-            }, 10);
+            el.style.filter = 'blur(4px)';
+
             if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            rowScrolling[cat] = true;
+
+            requestAnimationFrame(function() {
+                requestAnimationFrame(function() {
+                    // Animate ghost out
+                    ghost.style.transform = 'translateX(' + (dir * 80) + 'px) scale(0.92)';
+                    ghost.style.opacity = '0';
+                    ghost.style.filter = 'blur(6px)';
+
+                    // Animate new cards in
+                    el.style.transition = 'transform 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.45s ease, filter 0.45s ease';
+                    el.style.transform = 'translateX(0)';
+                    el.style.opacity = '1';
+                    el.style.filter = 'blur(0px)';
+
+                    setTimeout(function() {
+                        el.style.transition = '';
+                        el.style.transform = '';
+                        el.style.opacity = '';
+                        el.style.filter = '';
+                        ghost.remove();
+                        wrapper.style.overflow = '';
+                        rowScrolling[cat] = false;
+                    }, 460);
+                });
+            });
         }
 
         // ─── Cart ───────────────────────────────────────────────────────────────────
