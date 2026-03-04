@@ -464,7 +464,7 @@
                 </div>
             </div>
             <div class="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
-                <p>&copy; 2024 Daddington77. Not affiliated with Nintendo, Wizards, Konami, or Diddy.</p>
+                <p>&copy; 2024 Daddington77. Not affiliated with Nintendo, Wizards, or Konami.</p>
                 <div class="flex space-x-6 mt-4 md:mt-0">
                     <a href="#" class="hover:text-cyan-400 transition-colors">Privacy</a>
                     <a href="#" class="hover:text-cyan-400 transition-colors">Terms</a>
@@ -620,15 +620,35 @@
         let lastOrderItems = [];
         let lastOrderSnapshot = [];
 
-        // ─── Load listings ──────────────────────────────────────────────────────────
+        // ─── Load listings + merge live stock from Worker KV ───────────────────────
         async function loadListings() {
             try {
-                const resp = await fetch('/data/listings.json');
-                if (!resp.ok) throw new Error('listings.json not found');
-                const data = await resp.json();
-                allListings = data.listings.filter(item => item.stock > 0);
+                // Fetch listings and live stock in parallel
+                const [listingsResp, stockResp] = await Promise.all([
+                    fetch('/data/listings.json'),
+                    fetch(`${WORKER_URL}/stock`).catch(() => null),
+                ]);
+
+                if (!listingsResp.ok) throw new Error('listings.json not found');
+                const data = await listingsResp.json();
+
+                // Merge live stock counts from KV if available
+                let liveStock = null;
+                if (stockResp && stockResp.ok) {
+                    liveStock = await stockResp.json();
+                }
+
+                allListings = data.listings
+                    .map(item => {
+                        // If KV has a stock entry for this item, use it — otherwise fall back to listings.json
+                        if (liveStock && liveStock[String(item.id)] !== undefined) {
+                            return { ...item, stock: liveStock[String(item.id)] };
+                        }
+                        return item;
+                    })
+                    .filter(item => item.stock > 0);
+
                 renderShop();
-                // Dividers only — no button positioning needed anymore
                 setTimeout(initRowDividers, 50);
             } catch (err) {
                 console.error('Failed to load listings:', err);
@@ -1816,4 +1836,3 @@
     <script src="https://player.twitch.tv/js/embed/v1.js" onload="initTwitchPlayer()"></script>
 </body>
 </html>
-
