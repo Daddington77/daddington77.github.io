@@ -109,6 +109,30 @@
         .okay-btn:active {
             transform: translateY(0);
         }
+
+        /* ── Scroll arrow buttons ─────────────────────────────────────────────── */
+        /* Buttons sit as flex siblings flanking the card grid — no JS positioning needed */
+        .row-nav-btn {
+            flex-shrink: 0;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s ease, box-shadow 0.2s ease;
+            align-self: center;  /* vertically centre against the card grid */
+        }
+        .row-nav-btn:hover {
+            transform: scale(1.1);
+        }
+        .row-nav-btn:active {
+            transform: scale(0.92);
+        }
+        .row-nav-btn.hidden-btn {
+            visibility: hidden;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body class="gradient-bg min-h-screen">
@@ -418,125 +442,65 @@
         </div>
     </footer>
 
-    <!-- ══════════════════════════════════════════════════════════════════════════
-         SUCCESS MODAL
-         ══════════════════════════════════════════════════════════════════════ -->
+    <!-- SUCCESS MODAL -->
     <div id="successModal" class="fixed inset-0 z-[80] items-center justify-center p-4">
-        <!-- Backdrop -->
         <div class="absolute inset-0 bg-black/85 backdrop-blur-md"></div>
-
-        <!-- Confetti container -->
         <div id="confettiContainer" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
-
-        <!-- Card -->
         <div class="success-card relative w-full max-w-sm mx-auto success-glow rounded-3xl overflow-hidden flex flex-col"
              style="background: linear-gradient(135deg, rgba(10,10,20,0.98) 0%, rgba(15,10,30,0.98) 100%); border: 1px solid rgba(0,243,255,0.25); max-height: 90vh;">
-
-            <!-- Top accent bar -->
             <div style="height:3px; background: linear-gradient(90deg, #00f3ff, #bc13fe, #39ff14, #00f3ff); background-size: 200% auto; animation: shimmer 2s linear infinite;"></div>
-
-            <!-- Glow orb behind checkmark -->
             <div class="absolute top-8 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full"
                  style="background: radial-gradient(circle, rgba(57,255,20,0.18) 0%, transparent 70%); filter: blur(8px);"></div>
-
             <div class="px-8 pt-10 pb-8 flex flex-col items-center text-center relative overflow-y-auto flex-1" style="scrollbar-width:thin; scrollbar-color: rgba(0,243,255,0.3) transparent;">
-
-                <!-- Animated SVG checkmark -->
                 <div class="relative mb-6">
                     <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <!-- Outer glow circle -->
                         <circle cx="40" cy="40" r="38" stroke="rgba(57,255,20,0.15)" stroke-width="2"/>
-                        <!-- Animated circle -->
-                        <circle class="success-circle" cx="40" cy="40" r="32"
-                                stroke="#39ff14" stroke-width="2.5"
-                                stroke-linecap="round"
-                                transform="rotate(-90 40 40)"/>
-                        <!-- Animated checkmark -->
-                        <polyline class="success-check" points="24,40 35,52 56,28"
-                                  stroke="#39ff14" stroke-width="3.5"
-                                  stroke-linecap="round" stroke-linejoin="round"
-                                  fill="none"/>
+                        <circle class="success-circle" cx="40" cy="40" r="32" stroke="#39ff14" stroke-width="2.5" stroke-linecap="round" transform="rotate(-90 40 40)"/>
+                        <polyline class="success-check" points="24,40 35,52 56,28" stroke="#39ff14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
                     </svg>
-                    <!-- Pulse ring -->
-                    <div class="absolute inset-0 rounded-full animate-ping"
-                         style="background: rgba(57,255,20,0.08); animation-duration: 1.8s; animation-delay: 0.8s;"></div>
+                    <div class="absolute inset-0 rounded-full animate-ping" style="background: rgba(57,255,20,0.08); animation-duration: 1.8s; animation-delay: 0.8s;"></div>
                 </div>
-
-                <!-- Title -->
-                <h2 class="font-orbitron text-2xl font-black mb-1 success-title-shimmer">
-                    ORDER PLACED!
-                </h2>
+                <h2 class="font-orbitron text-2xl font-black mb-1 success-title-shimmer">ORDER PLACED!</h2>
                 <p class="text-gray-400 text-sm mb-6">Your packs are locked in for the next live break ⚡</p>
-
-                <!-- Divider -->
                 <div class="w-full h-px mb-6" style="background: linear-gradient(90deg, transparent, rgba(0,243,255,0.3), transparent);"></div>
-
-                <!-- Order summary -->
                 <div id="successOrderSummary" class="w-full space-y-2 mb-6 max-h-40 overflow-y-auto pr-1"></div>
-
-                <!-- Total -->
                 <div class="w-full flex justify-between items-center px-4 py-3 rounded-xl mb-6"
                      style="background: rgba(0,243,255,0.06); border: 1px solid rgba(0,243,255,0.15);">
                     <span class="text-gray-400 text-sm font-semibold uppercase tracking-wider">Total Paid</span>
                     <span id="successTotal" class="font-orbitron font-bold text-cyan-400 text-lg"></span>
                 </div>
-
-                <!-- What's next -->
                 <div class="w-full text-left space-y-2 mb-8">
                     <p class="text-xs text-gray-500 uppercase tracking-widest font-semibold mb-3">What happens next</p>
                     <div class="flex items-start gap-3 text-sm text-gray-300">
-                        <span class="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold mt-0.5"
-                              style="background: rgba(188,19,254,0.3); border: 1px solid rgba(188,19,254,0.5); color: #bc13fe;">1</span>
+                        <span class="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold mt-0.5" style="background: rgba(188,19,254,0.3); border: 1px solid rgba(188,19,254,0.5); color: #bc13fe;">1</span>
                         <span>Watch for your username on the next live Twitch break</span>
                     </div>
                     <div class="flex items-start gap-3 text-sm text-gray-300">
-                        <span class="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold mt-0.5"
-                              style="background: rgba(0,243,255,0.2); border: 1px solid rgba(0,243,255,0.4); color: #00f3ff;">2</span>
+                        <span class="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold mt-0.5" style="background: rgba(0,243,255,0.2); border: 1px solid rgba(0,243,255,0.4); color: #00f3ff;">2</span>
                         <span>Daddington rips your packs live on stream</span>
                     </div>
                     <div class="flex items-start gap-3 text-sm text-gray-300">
-                        <span class="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold mt-0.5"
-                              style="background: rgba(57,255,20,0.2); border: 1px solid rgba(57,255,20,0.4); color: #39ff14;">3</span>
+                        <span class="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold mt-0.5" style="background: rgba(57,255,20,0.2); border: 1px solid rgba(57,255,20,0.4); color: #39ff14;">3</span>
                         <span>All cards are top-loaded and shipped to you</span>
                     </div>
                 </div>
-
-                <!-- Shipping + Twitch form -->
                 <div class="w-full space-y-3 mb-6">
                     <p class="text-xs text-gray-500 uppercase tracking-widest font-semibold mb-3 text-left">Your Details</p>
-                    <input id="fieldTwitch" type="text" placeholder="Twitch Username (optional)"
-                           class="w-full px-4 py-2.5 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
-                           style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12);">
-                    <input id="fieldName" type="text" placeholder="Full Name *"
-                           class="w-full px-4 py-2.5 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
-                           style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12);">
-                    <input id="fieldAddress" type="text" placeholder="Street Address *"
-                           class="w-full px-4 py-2.5 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
-                           style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12);">
+                    <input id="fieldTwitch" type="text" placeholder="Twitch Username (optional)" class="w-full px-4 py-2.5 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12);">
+                    <input id="fieldName" type="text" placeholder="Full Name *" class="w-full px-4 py-2.5 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12);">
+                    <input id="fieldAddress" type="text" placeholder="Street Address *" class="w-full px-4 py-2.5 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12);">
                     <div class="grid grid-cols-2 gap-3">
-                        <input id="fieldCity" type="text" placeholder="City *"
-                               class="w-full px-4 py-2.5 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
-                               style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12);">
-                        <input id="fieldState" type="text" placeholder="State *"
-                               class="w-full px-4 py-2.5 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
-                               style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12);">
+                        <input id="fieldCity" type="text" placeholder="City *" class="w-full px-4 py-2.5 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12);">
+                        <input id="fieldState" type="text" placeholder="State *" class="w-full px-4 py-2.5 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12);">
                     </div>
-                    <input id="fieldZip" type="text" placeholder="ZIP Code *"
-                           class="w-full px-4 py-2.5 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
-                           style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12);">
+                    <input id="fieldZip" type="text" placeholder="ZIP Code *" class="w-full px-4 py-2.5 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12);">
                     <div id="formError" class="hidden text-red-400 text-xs text-center pt-1"></div>
                 </div>
-
-                <!-- Submit button -->
-                <button id="submitDetailsBtn" onclick="submitOrderDetails()"
-                        class="okay-btn w-full py-4 rounded-xl font-orbitron font-bold text-base tracking-wider text-black flex items-center justify-center gap-2">
+                <button id="submitDetailsBtn" onclick="submitOrderDetails()" class="okay-btn w-full py-4 rounded-xl font-orbitron font-bold text-base tracking-wider text-black flex items-center justify-center gap-2">
                     <span id="submitDetailsText">SUBMIT & LET'S GO! ⚡</span>
                     <span id="submitDetailsSpinner" class="hidden w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
                 </button>
-
-                <!-- Twitch link -->
-                <a href="https://www.twitch.tv/daddington77" target="_blank"
-                   class="mt-4 text-sm text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1.5">
+                <a href="https://www.twitch.tv/daddington77" target="_blank" class="mt-4 text-sm text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1.5">
                     <i data-lucide="twitch" class="w-3.5 h-3.5"></i>
                     Watch on Twitch while you wait
                 </a>
@@ -544,14 +508,11 @@
         </div>
     </div>
 
-    <!-- ══════════════════════════════════════════════════════════════════════════
-         STRIPE PAYMENT MODAL
-         ══════════════════════════════════════════════════════════════════════ -->
+    <!-- STRIPE PAYMENT MODAL -->
     <div id="paymentModal" class="fixed inset-0 z-[60] hidden">
         <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" id="paymentOverlay"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4">
             <div class="relative w-full max-w-md glass border border-white/10 rounded-2xl flex flex-col" style="max-height: 90vh;">
-                <!-- Fixed header -->
                 <div class="flex items-center justify-between p-6 border-b border-white/10 flex-shrink-0">
                     <div>
                         <h3 class="font-orbitron text-xl font-bold">SECURE CHECKOUT</h3>
@@ -564,7 +525,6 @@
                         <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
                 </div>
-                <!-- Scrollable middle -->
                 <div class="overflow-y-auto flex-1 px-6 pt-4 pb-2">
                     <div class="flex justify-between items-center text-sm text-gray-400 mb-4">
                         <span>Order total</span>
@@ -578,21 +538,15 @@
                     </div>
                     <div id="payment-message" class="hidden mt-3 text-sm text-red-400 text-center"></div>
                 </div>
-                <!-- Fixed footer with Pay Now always visible -->
                 <div class="px-6 py-5 border-t border-white/10 flex-shrink-0">
                     <div class="flex gap-3">
-                        <button onclick="closePaymentModal()" class="px-5 py-4 glass rounded-lg font-bold text-gray-300 hover:bg-white/10 hover:text-white transition-all border border-white/10 flex-shrink-0">
-                            CANCEL
-                        </button>
-                        <button id="payNowBtn" onclick="submitPayment()" disabled
-                            class="flex-1 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg font-bold text-lg transition-all flex items-center justify-center gap-2 opacity-50 cursor-not-allowed">
+                        <button onclick="closePaymentModal()" class="px-5 py-4 glass rounded-lg font-bold text-gray-300 hover:bg-white/10 hover:text-white transition-all border border-white/10 flex-shrink-0">CANCEL</button>
+                        <button id="payNowBtn" onclick="submitPayment()" disabled class="flex-1 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg font-bold text-lg transition-all flex items-center justify-center gap-2 opacity-50 cursor-not-allowed">
                             <span id="payNowText">PAY NOW</span>
                             <span id="payNowSpinner" class="hidden w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                         </button>
                     </div>
-                    <p class="text-center text-xs text-gray-500 mt-3">
-                        Cards, Apple Pay, Google Pay & Cash App accepted
-                    </p>
+                    <p class="text-center text-xs text-gray-500 mt-3">Cards, Apple Pay, Google Pay & Cash App accepted</p>
                 </div>
             </div>
         </div>
@@ -632,8 +586,8 @@
         // ─── State ─────────────────────────────────────────────────────────────────
         let allListings = [];
         let cart = [];
-        let lastOrderItems = [];   // snapshot of cart at payment time for success modal
-        let lastOrderSnapshot = []; // copy used by Worker submission
+        let lastOrderItems = [];
+        let lastOrderSnapshot = [];
 
         // ─── Load listings ──────────────────────────────────────────────────────────
         async function loadListings() {
@@ -643,8 +597,8 @@
                 const data = await resp.json();
                 allListings = data.listings.filter(item => item.stock > 0);
                 renderShop();
+                // Dividers only — no button positioning needed anymore
                 setTimeout(initRowDividers, 50);
-                setTimeout(positionRowButtons, 60);
             } catch (err) {
                 console.error('Failed to load listings:', err);
                 document.getElementById('shopLoading').classList.add('hidden');
@@ -652,12 +606,14 @@
             }
         }
 
-        // ─── Render shop rows (Netflix-style) ──────────────────────────────────────
+        // ─── Render shop rows ───────────────────────────────────────────────────────
         const CATEGORY_META = {
-            pokemon: { label: 'POKÉMON',  accent: 'from-yellow-400 to-red-500',   border: 'border-yellow-500/40', borderColor: 'rgba(234,179,8,0.5)',   glowColor: 'rgba(234,179,8,0.2)'   },
-            magic:   { label: 'MAGIC',    accent: 'from-blue-400 to-purple-600',  border: 'border-blue-500/40',   borderColor: 'rgba(59,130,246,0.5)',  glowColor: 'rgba(59,130,246,0.2)'  },
-            yugioh:  { label: 'YU-GI-OH', accent: 'from-purple-400 to-pink-500', border: 'border-purple-500/40', borderColor: 'rgba(168,85,247,0.5)',  glowColor: 'rgba(168,85,247,0.2)'  },
+            pokemon: { label: 'POKÉMON',  accent: 'from-yellow-400 to-red-500',   borderColor: 'rgba(234,179,8,0.5)',  glowColor: 'rgba(234,179,8,0.2)'  },
+            magic:   { label: 'MAGIC',    accent: 'from-blue-400 to-purple-600',  borderColor: 'rgba(59,130,246,0.5)', glowColor: 'rgba(59,130,246,0.2)' },
+            yugioh:  { label: 'YU-GI-OH', accent: 'from-purple-400 to-pink-500', borderColor: 'rgba(168,85,247,0.5)', glowColor: 'rgba(168,85,247,0.2)' },
         };
+
+        const PAGE_SIZE = 5;
 
         function cardHTML(card) {
             var stockBadge = card.stock <= 3
@@ -670,23 +626,20 @@
             img.onerror = function() { this.src = 'https://placehold.co/300x400/1a1a2e/ffffff?text=No+Image'; };
             var imgHTML = img.outerHTML;
             var html = '';
-            html += '<div class="relative flex-shrink-0 w-44 rounded-xl overflow-hidden card-hover group cursor-pointer" style="scroll-snap-align:start;">';
-            // Animated border glow wrapper
+            html += '<div class="relative flex-shrink-0 rounded-xl overflow-hidden card-hover group cursor-pointer">';
             html += '<div class="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" style="background: linear-gradient(135deg, rgba(0,243,255,0.3), rgba(188,19,254,0.3)); padding:1px; z-index:0;"></div>';
             html += '<div class="relative rounded-xl overflow-hidden" style="background: rgba(10,10,20,0.9); border: 1px solid rgba(255,255,255,0.08); z-index:1;">';
             html += '<div class="relative overflow-hidden bg-gradient-to-b from-gray-800 to-black" style="aspect-ratio:3/4;">';
-            // Shimmer overlay on hover
             html += '<div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" style="background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.05) 50%, transparent 60%);"></div>';
             html += imgHTML;
             html += '<div class="absolute top-2 left-2 px-2 py-1 bg-black/70 backdrop-blur-sm text-xs rounded-md border border-white/10 uppercase font-bold text-gray-300">' + card.condition + '</div>';
             html += stockBadge;
-            // Bottom gradient fade
             html += '<div class="absolute bottom-0 left-0 right-0 h-12" style="background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);"></div>';
             html += '</div>';
             html += '<div class="p-3" style="background: rgba(0,0,0,0.4);">';
             html += '<h3 class="font-bold text-gray-200 mb-2 truncate text-sm">' + card.name + '</h3>';
             html += '<div class="flex justify-between items-center">';
-            html += '<span class="text-cyan-400 font-orbitron font-bold text-sm">' + '$' + card.price.toLocaleString() + '</span>';
+            html += '<span class="text-cyan-400 font-orbitron font-bold text-sm">$' + card.price.toLocaleString() + '</span>';
             html += '<button onclick="addToCart(' + card.id + ')" class="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold leading-none transition-all hover:scale-110" style="background: linear-gradient(135deg, rgba(0,243,255,0.2), rgba(188,19,254,0.2)); border: 1px solid rgba(0,243,255,0.3);">+</button>';
             html += '</div></div></div></div>';
             return html;
@@ -710,40 +663,66 @@
             rows.innerHTML = categories.map(cat => {
                 const items = allListings.filter(i => i.game === cat);
                 if (items.length === 0) return '';
-                const meta = CATEGORY_META[cat] || { label: cat.toUpperCase(), accent: 'from-gray-400 to-gray-600', border: 'border-white/20' };
+                const meta = CATEGORY_META[cat] || { label: cat.toUpperCase(), accent: 'from-gray-400 to-gray-600', borderColor: 'rgba(255,255,255,0.3)', glowColor: 'rgba(255,255,255,0.1)' };
+
+                // Only render the first PAGE_SIZE items on load
+                const initialItems = items.slice(0, PAGE_SIZE);
+                const canScroll = items.length > PAGE_SIZE;
+
+                // Grid columns: use actual count if fewer than PAGE_SIZE, else PAGE_SIZE
+                const cols = Math.min(items.length, PAGE_SIZE);
+                const gridStyle = `grid-template-columns: repeat(${cols}, 1fr); gap: 20px;`;
+
+                // Hide scroll buttons if there's nothing to scroll
+                const btnVisibility = canScroll ? '' : 'visibility:hidden; pointer-events:none;';
+
                 return `
                     <div class="relative pt-6 pb-0">
-                        <!-- ambient glow for the row -->
-                        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-32 opacity-20 pointer-events-none" style="background: radial-gradient(ellipse, var(--row-color, rgba(0,243,255,0.4)), transparent 70%); filter: blur(30px);"></div>
+                        <!-- ambient glow -->
+                        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-32 opacity-20 pointer-events-none"
+                             style="background: radial-gradient(ellipse, ${meta.glowColor}, transparent 70%); filter: blur(30px);"></div>
+
                         <!-- Header -->
                         <div class="flex items-center mb-6 relative z-10">
-                            <div class="w-1 h-8 rounded-full mr-3" style="background: linear-gradient(to bottom, var(--row-accent-from, #00f3ff), var(--row-accent-to, #bc13fe));"></div>
+                            <div class="w-1 h-8 rounded-full mr-3" style="background: linear-gradient(to bottom, ${meta.borderColor}, ${meta.glowColor});"></div>
                             <h3 class="font-orbitron text-xl font-bold">
                                 <span class="text-transparent bg-clip-text bg-gradient-to-r ${meta.accent}">${meta.label}</span>
                             </h3>
                             <span class="ml-3 text-xs text-gray-500 font-semibold">${items.length} listing${items.length !== 1 ? 's' : ''}</span>
                         </div>
-                        <!-- Scroll container with nav buttons overlaid at card edges -->
-                        <div class="relative z-10">
+
+                        <!--
+                            FIX: Buttons are flex siblings of the card grid, not absolutely positioned.
+                            This means they always sit exactly at the left/right edges of the card row
+                            at every viewport size — no JS measurement needed.
+                        -->
+                        <div class="relative z-10 flex items-center gap-3">
+
                             <!-- Left arrow -->
                             <button id="btn-left-${cat}" onclick="scrollRow('${cat}', -1)"
-                                    class="scroll-arrow absolute z-20 flex items-center justify-center transition-all active:scale-90 group"
-                                    style="width:52px; height:52px; border-radius:50%; background: linear-gradient(135deg, rgba(10,10,20,0.95), rgba(20,10,40,0.95)); border: 1px solid ${meta.borderColor}; box-shadow: 0 0 20px ${meta.glowColor}, 0 0 40px ${meta.glowColor}, inset 0 1px 0 rgba(255,255,255,0.1);">
-                                <i data-lucide="chevron-left" class="w-6 h-6 relative z-10" style="filter: drop-shadow(0 0 4px ${meta.borderColor});"></i>
+                                    class="row-nav-btn"
+                                    style="background: linear-gradient(135deg, rgba(10,10,20,0.95), rgba(20,10,40,0.95)); border: 1px solid ${meta.borderColor}; box-shadow: 0 0 16px ${meta.glowColor}, inset 0 1px 0 rgba(255,255,255,0.1); ${btnVisibility}">
+                                <i data-lucide="chevron-left" class="w-5 h-5" style="filter: drop-shadow(0 0 4px ${meta.borderColor});"></i>
                             </button>
+
+                            <!-- Card grid — flex-1 fills space between buttons -->
+                            <div id="row-${cat}"
+                                 class="flex-1 grid pb-4 overflow-hidden"
+                                 style="${gridStyle}"
+                                 data-offset="0"
+                                 data-cat="${cat}">
+                                ${initialItems.map(cardHTML).join('')}
+                            </div>
+
                             <!-- Right arrow -->
                             <button id="btn-right-${cat}" onclick="scrollRow('${cat}', 1)"
-                                    class="scroll-arrow absolute z-20 flex items-center justify-center transition-all active:scale-90 group"
-                                    style="width:52px; height:52px; border-radius:50%; background: linear-gradient(135deg, rgba(10,10,20,0.95), rgba(20,10,40,0.95)); border: 1px solid ${meta.borderColor}; box-shadow: 0 0 20px ${meta.glowColor}, 0 0 40px ${meta.glowColor}, inset 0 1px 0 rgba(255,255,255,0.1);">
-                                <i data-lucide="chevron-right" class="w-6 h-6 relative z-10" style="filter: drop-shadow(0 0 4px ${meta.borderColor});"></i>
+                                    class="row-nav-btn"
+                                    style="background: linear-gradient(135deg, rgba(10,10,20,0.95), rgba(20,10,40,0.95)); border: 1px solid ${meta.borderColor}; box-shadow: 0 0 16px ${meta.glowColor}, inset 0 1px 0 rgba(255,255,255,0.1); ${btnVisibility}">
+                                <i data-lucide="chevron-right" class="w-5 h-5" style="filter: drop-shadow(0 0 4px ${meta.borderColor});"></i>
                             </button>
-                            <!-- The row itself — fixed to show exactly 5 cards (or fewer) -->
-                            <div id="row-${cat}"
-                                 class="pb-4 overflow-hidden ${items.length < 5 ? 'flex justify-center' : 'grid'}"
-                                 style="${items.length >= 5 ? 'grid-template-columns: repeat(5, 1fr); gap: 20px;' : 'gap: 20px;'}">
-                                ${items.map(cardHTML).join('')}
-                            </div>
+
                         </div>
+
                         <!-- bottom decorative divider -->
                         <div class="mt-2 relative overflow-hidden rounded-xl" style="height: 40px;">
                             <canvas class="row-divider-canvas absolute inset-0 w-full h-full"></canvas>
@@ -755,42 +734,31 @@
             if (typeof lucide !== "undefined") lucide.createIcons();
         }
 
+        // ─── Scroll rows ────────────────────────────────────────────────────────────
         var rowScrolling = {};
 
-        function applyRowLayout(el, itemCount) {
-            if (itemCount < 5) {
-                el.style.display = 'flex';
-                el.style.justifyContent = 'center';
-                el.style.gap = '20px';
-                el.style.gridTemplateColumns = '';
-            } else {
-                el.style.display = 'grid';
-                el.style.gridTemplateColumns = 'repeat(5, 1fr)';
-                el.style.gap = '20px';
-                el.style.justifyContent = '';
-            }
-        }
-
         function scrollRow(cat, dir) {
-            if (rowScrolling[cat]) return; // prevent rapid clicks mid-animation
+            if (rowScrolling[cat]) return;
             const el = document.getElementById('row-' + cat);
             if (!el) return;
             const items = allListings.filter(i => i.game === cat);
-            const visible = Math.min(items.length, 5);
+            if (items.length <= PAGE_SIZE) return; // nothing to scroll
+
+            const visible = PAGE_SIZE;
             var current = parseInt(el.dataset.offset || '0');
             var next = ((current + dir) % items.length + items.length) % items.length;
 
-            // Build incoming cards
             var incoming = [];
             for (var i = 0; i < visible; i++) {
                 incoming.push(items[(next + i) % items.length]);
             }
 
-            // Create a ghost overlay for the outgoing cards
+            // Ghost the outgoing cards
             var ghost = document.createElement('div');
-            ghost.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5;';
+            ghost.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5;display:grid;';
+            ghost.style.gridTemplateColumns = 'repeat(' + visible + ', 1fr)';
+            ghost.style.gap = '20px';
             ghost.innerHTML = el.innerHTML;
-            applyRowLayout(ghost, items.length);
             ghost.style.transition = 'none';
 
             var wrapper = el.parentElement;
@@ -798,15 +766,13 @@
             wrapper.style.overflow = 'hidden';
             wrapper.appendChild(ghost);
 
-            // Slide ghost out
             ghost.style.transition = 'transform 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.45s ease';
             ghost.style.transform = 'translateX(0) scale(1)';
             ghost.style.opacity = '1';
 
-            // Update real row but hide it, position it coming in from opposite side
+            // Load incoming cards
             el.innerHTML = incoming.map(cardHTML).join('');
             el.dataset.offset = next;
-            applyRowLayout(el, items.length);
             el.style.transition = 'none';
             el.style.transform = 'translateX(' + (dir * -60) + 'px)';
             el.style.opacity = '0';
@@ -818,12 +784,10 @@
 
             requestAnimationFrame(function() {
                 requestAnimationFrame(function() {
-                    // Animate ghost out
                     ghost.style.transform = 'translateX(' + (dir * 80) + 'px) scale(0.92)';
                     ghost.style.opacity = '0';
                     ghost.style.filter = 'blur(6px)';
 
-                    // Animate new cards in
                     el.style.transition = 'transform 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.45s ease, filter 0.45s ease';
                     el.style.transform = 'translateX(0)';
                     el.style.opacity = '1';
@@ -1010,17 +974,7 @@
                 const piece = document.createElement('div');
                 piece.className = 'confetti-piece';
                 const size = Math.random() * 8 + 5;
-                piece.style.cssText = `
-                    left: ${Math.random() * 100}%;
-                    top: ${-size}px;
-                    width: ${size}px;
-                    height: ${size}px;
-                    background: ${CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]};
-                    border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
-                    animation-delay: ${Math.random() * 0.8}s;
-                    animation-duration: ${1.2 + Math.random() * 0.8}s;
-                    opacity: ${0.7 + Math.random() * 0.3};
-                `;
+                piece.style.cssText = `left:${Math.random()*100}%;top:${-size}px;width:${size}px;height:${size}px;background:${CONFETTI_COLORS[Math.floor(Math.random()*CONFETTI_COLORS.length)]};border-radius:${Math.random()>0.5?'50%':'2px'};animation-delay:${Math.random()*0.8}s;animation-duration:${1.2+Math.random()*0.8}s;opacity:${0.7+Math.random()*0.3};`;
                 container.appendChild(piece);
             }
             setTimeout(() => { container.innerHTML = ''; }, 3000);
@@ -1031,8 +985,7 @@
             const summary = document.getElementById('successOrderSummary');
             summary.innerHTML = orderItems.map(item => `
                 <div class="flex items-center gap-3 py-1.5">
-                    <img src="${item.image}" class="w-10 h-10 object-cover rounded-lg flex-shrink-0"
-                         onerror="this.src='https://placehold.co/40x40/1a1a2e/ffffff?text=?'">
+                    <img src="${item.image}" class="w-10 h-10 object-cover rounded-lg flex-shrink-0" onerror="this.src='https://placehold.co/40x40/1a1a2e/ffffff?text=?'">
                     <span class="flex-1 text-sm text-gray-200 text-left truncate">${item.name}</span>
                     <span class="text-cyan-400 font-bold text-sm font-orbitron">$${item.price.toLocaleString()}</span>
                 </div>
@@ -1055,13 +1008,11 @@
             document.body.style.overflow = 'hidden';
 
             if (typeof lucide !== "undefined") lucide.createIcons();
-
             setTimeout(spawnConfetti, 300);
         }
 
         function closeSuccessModal() {
-            const modal = document.getElementById('successModal');
-            modal.classList.remove('show');
+            document.getElementById('successModal').classList.remove('show');
             document.body.style.overflow = '';
         }
 
@@ -1089,13 +1040,11 @@
 
         async function startCheckout() {
             if (cart.length === 0) return;
-
             initStripe();
 
             const btn     = document.getElementById('checkoutBtn');
             const btnText = document.getElementById('checkoutBtnText');
             const spinner = document.getElementById('checkoutSpinner');
-
             btn.disabled = true;
             btnText.textContent = 'LOADING...';
             spinner.classList.remove('hidden');
@@ -1108,34 +1057,19 @@
                 });
 
                 const data = await resp.json();
-
-                if (!resp.ok || !data.clientSecret) {
-                    throw new Error(data.error || 'Could not start checkout');
-                }
+                if (!resp.ok || !data.clientSecret) throw new Error(data.error || 'Could not start checkout');
 
                 elements = stripe.elements({
                     clientSecret: data.clientSecret,
                     appearance: {
                         theme: 'night',
-                        variables: {
-                            colorPrimary: '#00f3ff',
-                            colorBackground: '#181820',
-                            colorText: '#ffffff',
-                            colorDanger: '#ff4d4d',
-                            fontFamily: 'Inter, sans-serif',
-                            borderRadius: '8px',
-                        },
+                        variables: { colorPrimary: '#00f3ff', colorBackground: '#181820', colorText: '#ffffff', colorDanger: '#ff4d4d', fontFamily: 'Inter, sans-serif', borderRadius: '8px' },
                     },
                 });
 
                 document.getElementById('stripeLoading').style.display = 'none';
-
-                paymentElement = elements.create('payment', {
-                    layout: 'tabs',
-                    wallets: { applePay: 'auto', googlePay: 'auto' },
-                });
+                paymentElement = elements.create('payment', { layout: 'tabs', wallets: { applePay: 'auto', googlePay: 'auto' } });
                 paymentElement.mount('#payment-element');
-
                 paymentElement.on('ready', () => {
                     const payBtn = document.getElementById('payNowBtn');
                     payBtn.disabled = false;
@@ -1144,9 +1078,7 @@
 
                 const total = cart.reduce((s, i) => s + i.price, 0);
                 document.getElementById('paymentTotal').textContent = '$' + total.toLocaleString();
-
                 lastOrderItems = [...cart];
-
                 openPaymentModal();
 
             } catch (err) {
@@ -1163,7 +1095,6 @@
 
         async function submitPayment() {
             if (!stripe || !elements) return;
-
             const btn     = document.getElementById('payNowBtn');
             const btnText = document.getElementById('payNowText');
             const spinner = document.getElementById('payNowSpinner');
@@ -1176,9 +1107,7 @@
 
             const { error } = await stripe.confirmPayment({
                 elements,
-                confirmParams: {
-                    return_url: window.location.origin + '/',
-                },
+                confirmParams: { return_url: window.location.origin + '/' },
                 redirect: 'if_required',
             });
 
@@ -1190,12 +1119,10 @@
                 spinner.classList.add('hidden');
             } else {
                 closePaymentModal();
-
                 const orderSnapshot = [...lastOrderItems];
                 cart = [];
                 lastOrderItems = [];
                 updateCart();
-
                 openSuccessModal(orderSnapshot);
             }
         }
@@ -1257,21 +1184,17 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ twitch, name, address, city, state, zip, items: lastOrderSnapshot }),
                 });
-
                 if (!resp.ok) throw new Error('Server error');
-
                 closeSuccessModal();
-
             } catch (err) {
                 console.error('Submit order error:', err);
                 errEl.textContent = 'Failed to send — please screenshot this and DM us on Discord.';
                 errEl.classList.remove('hidden');
                 btn.disabled = false;
-                btnText.textContent = 'SUBMIT & LET\'S GO! ⚡';
+                btnText.textContent = "SUBMIT & LET'S GO! ⚡";
                 spinner.classList.add('hidden');
             }
         }
-
 
         // ─── Row divider wave animation ─────────────────────────────────────────────
         function initRowDividers() {
@@ -1282,7 +1205,7 @@
                 var H = canvas.offsetHeight;
                 canvas.width = W;
                 canvas.height = H;
-                var t = idx * 40; // offset each divider
+                var t = idx * 40;
 
                 var colors = [
                     ['rgba(0,243,255,', 'rgba(188,19,254,'],
@@ -1293,8 +1216,6 @@
 
                 function draw() {
                     ctx.clearRect(0, 0, W, H);
-
-                    // Draw 3 flowing waves
                     for (var w = 0; w < 3; w++) {
                         ctx.beginPath();
                         var amp = 10 + w * 5;
@@ -1302,14 +1223,12 @@
                         var speed = 0.025 + w * 0.01;
                         var yBase = H * (0.3 + w * 0.2);
                         var alpha = 0.35 - w * 0.08;
-
                         for (var x = 0; x <= W; x += 2) {
                             var y = yBase + Math.sin(x * freq + t * speed + w) * amp
                                          + Math.sin(x * freq * 1.7 + t * speed * 0.6) * (amp * 0.4);
                             if (x === 0) ctx.moveTo(x, y);
                             else ctx.lineTo(x, y);
                         }
-
                         var grad = ctx.createLinearGradient(0, 0, W, 0);
                         grad.addColorStop(0,   pair[0] + '0)');
                         grad.addColorStop(0.3, pair[0] + alpha + ')');
@@ -1319,8 +1238,6 @@
                         ctx.lineWidth = 1.5 + w * 0.5;
                         ctx.stroke();
                     }
-
-                    // Floating particles
                     for (var p = 0; p < 8; p++) {
                         var px = (W * (p / 8) + t * (0.3 + p * 0.1)) % W;
                         var py = H * 0.5 + Math.sin(t * 0.04 + p * 1.2) * (H * 0.3);
@@ -1331,44 +1248,12 @@
                         ctx.fillStyle = p % 2 === 0 ? pair[0] + palpha + ')' : pair[1] + palpha + ')';
                         ctx.fill();
                     }
-
                     t++;
                     requestAnimationFrame(draw);
                 }
                 draw();
             });
         }
-
-
-        // ─── Position scroll buttons on card edges ──────────────────────────────────
-        function positionRowButtons() {
-            ['pokemon', 'magic', 'yugioh'].forEach(function(cat) {
-                var row = document.getElementById('row-' + cat);
-                var btnLeft = document.getElementById('btn-left-' + cat);
-                var btnRight = document.getElementById('btn-right-' + cat);
-                if (!row || !btnLeft || !btnRight) return;
-
-                var firstCard = row.firstElementChild;
-                var lastCard = row.lastElementChild;
-                if (!firstCard || !lastCard) return;
-
-                var rowRect = row.parentElement.getBoundingClientRect();
-                var firstRect = firstCard.getBoundingClientRect();
-                var lastRect = lastCard.getBoundingClientRect();
-                var cardMidY = (firstRect.top + firstRect.bottom) / 2 - rowRect.top - 26;
-
-                // Button mostly outside card, only ~8px edge overlap
-                btnLeft.style.left = (firstRect.left - rowRect.left - 44) + 'px';
-                btnLeft.style.top = cardMidY + 'px';
-                btnLeft.style.transform = 'translate(0, 0)';
-
-                btnRight.style.left = (lastRect.right - rowRect.left - 8) + 'px';
-                btnRight.style.top = cardMidY + 'px';
-                btnRight.style.transform = 'translate(0, 0)';
-            });
-        }
-
-        window.addEventListener('resize', positionRowButtons);
 
         // ─── Init ───────────────────────────────────────────────────────────────────
         loadListings();
