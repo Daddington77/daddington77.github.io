@@ -711,9 +711,7 @@
                 if (items.length === 0) return '';
                 const meta = CATEGORY_META[cat] || { label: cat.toUpperCase(), accent: 'from-gray-400 to-gray-600', border: 'border-white/20' };
                 return `
-                    <div class="relative py-10">
-                        <!-- top fade divider -->
-                        <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);"></div>
+                    <div class="relative pt-8 pb-2">
                         <!-- ambient glow for the row -->
                         <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-32 opacity-20 pointer-events-none" style="background: radial-gradient(ellipse, var(--row-color, rgba(0,243,255,0.4)), transparent 70%); filter: blur(30px);"></div>
                         <div class="flex items-center justify-between mb-6 relative z-10">
@@ -741,7 +739,7 @@
                             ${items.map(cardHTML).join('')}
                         </div>
                         <!-- bottom decorative divider -->
-                        <div class="mt-8 relative overflow-hidden rounded-xl" style="height: 80px;">
+                        <div class="mt-4 relative overflow-hidden rounded-xl" style="height: 60px;">
                             <canvas class="row-divider-canvas absolute inset-0 w-full h-full"></canvas>
                         </div>
                     </div>
