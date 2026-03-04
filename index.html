@@ -705,14 +705,15 @@
                                 <i data-lucide="chevron-left" class="w-5 h-5" style="filter: drop-shadow(0 0 4px ${meta.borderColor});"></i>
                             </button>
 
-                            <!-- Card grid — flex-1 fills space between buttons -->
+                            <!-- Card grid — overflow:hidden clips cards during exit/enter animation -->
+                            <div class="flex-1 overflow-hidden" style="padding:8px 0;margin:-8px 0;">
                             <div id="row-${cat}"
-                                 class="flex-1 grid pb-4 overflow-hidden"
+                                 class="grid pb-4"
                                  style="${gridStyle}"
                                  data-offset="0"
                                  data-cat="${cat}">
                                 ${initialItems.map(cardHTML).join('')}
-                            </div>
+                            </div></div>
 
                             <!-- Right arrow -->
                             <button id="btn-right-${cat}" onclick="scrollRow('${cat}', 1)"
@@ -734,7 +735,7 @@
             if (typeof lucide !== "undefined") lucide.createIcons();
         }
 
-        // ─── Scroll rows ────────────────────────────────────────────────────────────
+        // ─── Scroll rows — cinematic staggered animation ────────────────────────────
         var rowScrolling = {};
 
         function scrollRow(cat, dir) {
@@ -742,68 +743,103 @@
             const el = document.getElementById('row-' + cat);
             if (!el) return;
             const items = allListings.filter(i => i.game === cat);
-            if (items.length <= PAGE_SIZE) return; // nothing to scroll
-
-            const visible = PAGE_SIZE;
-            var current = parseInt(el.dataset.offset || '0');
-            var next = ((current + dir) % items.length + items.length) % items.length;
-
-            var incoming = [];
-            for (var i = 0; i < visible; i++) {
-                incoming.push(items[(next + i) % items.length]);
-            }
-
-            // Ghost the outgoing cards
-            var ghost = document.createElement('div');
-            ghost.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5;display:grid;';
-            ghost.style.gridTemplateColumns = 'repeat(' + visible + ', 1fr)';
-            ghost.style.gap = '20px';
-            ghost.innerHTML = el.innerHTML;
-            ghost.style.transition = 'none';
-
-            var wrapper = el.parentElement;
-            wrapper.style.position = 'relative';
-            wrapper.style.overflow = 'hidden';
-            wrapper.appendChild(ghost);
-
-            ghost.style.transition = 'transform 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.45s ease';
-            ghost.style.transform = 'translateX(0) scale(1)';
-            ghost.style.opacity = '1';
-
-            // Load incoming cards
-            el.innerHTML = incoming.map(cardHTML).join('');
-            el.dataset.offset = next;
-            el.style.transition = 'none';
-            el.style.transform = 'translateX(' + (dir * -60) + 'px)';
-            el.style.opacity = '0';
-            el.style.filter = 'blur(4px)';
-
-            if (typeof lucide !== 'undefined') lucide.createIcons();
+            if (items.length <= PAGE_SIZE) return;
 
             rowScrolling[cat] = true;
 
-            requestAnimationFrame(function() {
-                requestAnimationFrame(function() {
-                    ghost.style.transform = 'translateX(' + (dir * 80) + 'px) scale(0.92)';
-                    ghost.style.opacity = '0';
-                    ghost.style.filter = 'blur(6px)';
+            const current = parseInt(el.dataset.offset || '0');
+            const next    = ((current + dir) % items.length + items.length) % items.length;
 
-                    el.style.transition = 'transform 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.45s ease, filter 0.45s ease';
-                    el.style.transform = 'translateX(0)';
-                    el.style.opacity = '1';
-                    el.style.filter = 'blur(0px)';
+            // Build incoming card list
+            const incoming = [];
+            for (let i = 0; i < PAGE_SIZE; i++) {
+                incoming.push(items[(next + i) % items.length]);
+            }
 
-                    setTimeout(function() {
-                        el.style.transition = '';
-                        el.style.transform = '';
-                        el.style.opacity = '';
-                        el.style.filter = '';
-                        ghost.remove();
-                        wrapper.style.overflow = '';
-                        rowScrolling[cat] = false;
-                    }, 460);
-                });
+            // ── PHASE 1: stagger-exit existing cards ──────────────────────────────
+            const outCards = Array.from(el.children);
+            const STAGGER   = 55;   // ms between each card starting its exit
+            const EXIT_DUR  = 320;  // ms for one card to exit
+            const tiltDir   = dir;  // 1 = exit left, -1 = exit right
+
+            outCards.forEach(function(card, i) {
+                // Slightly different delay per card — leading edge exits first
+                const delay = dir === 1 ? i * STAGGER : (outCards.length - 1 - i) * STAGGER;
+                card.style.transition = 'none';
+                card.style.transformOrigin = 'center bottom';
+
+                setTimeout(function() {
+                    card.style.transition =
+                        'transform ' + EXIT_DUR + 'ms cubic-bezier(0.4,0,1,1), ' +
+                        'opacity '   + EXIT_DUR + 'ms ease, ' +
+                        'filter '    + EXIT_DUR + 'ms ease';
+                    card.style.transform =
+                        'translateX(' + (tiltDir * 110) + '%) ' +
+                        'translateY(-12px) ' +
+                        'rotate('     + (tiltDir * (4 + i * 1.5)) + 'deg) ' +
+                        'scale(0.82)';
+                    card.style.opacity = '0';
+                    card.style.filter  = 'blur(3px)';
+                }, delay);
             });
+
+            // Total time for all cards to finish exiting
+            const totalExitTime = (outCards.length - 1) * STAGGER + EXIT_DUR + 30;
+
+            // ── PHASE 2: swap content & stagger-enter new cards ───────────────────
+            setTimeout(function() {
+                // Swap in new HTML
+                el.innerHTML = incoming.map(cardHTML).join('');
+                el.dataset.offset = next;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+
+                const inCards = Array.from(el.children);
+                const ENTER_STAGGER = 70;
+                const ENTER_DUR     = 420;
+                const enterFrom     = dir; // come in from the opposite side
+
+                // Set starting state for all incoming cards (off-screen)
+                inCards.forEach(function(card) {
+                    card.style.transition = 'none';
+                    card.style.transformOrigin = 'center bottom';
+                    card.style.transform =
+                        'translateX(' + (-enterFrom * 80) + '%) ' +
+                        'translateY(20px) ' +
+                        'rotate(' + (-enterFrom * 8) + 'deg) ' +
+                        'scale(0.75)';
+                    card.style.opacity = '0';
+                    card.style.filter  = 'blur(6px)';
+                });
+
+                // Stagger each card into place with a springy bounce
+                inCards.forEach(function(card, i) {
+                    const delay = dir === 1 ? i * ENTER_STAGGER : (inCards.length - 1 - i) * ENTER_STAGGER;
+                    setTimeout(function() {
+                        card.style.transition =
+                            'transform ' + ENTER_DUR + 'ms cubic-bezier(0.34,1.48,0.64,1), ' +
+                            'opacity '   + (ENTER_DUR * 0.7) + 'ms ease, ' +
+                            'filter '    + (ENTER_DUR * 0.6) + 'ms ease';
+                        card.style.transform = 'translateX(0) translateY(0) rotate(0deg) scale(1)';
+                        card.style.opacity   = '1';
+                        card.style.filter    = 'blur(0px)';
+
+                        // Clean up inline styles after animation
+                        setTimeout(function() {
+                            card.style.transition = '';
+                            card.style.transform  = '';
+                            card.style.opacity    = '';
+                            card.style.filter     = '';
+                        }, ENTER_DUR + 50);
+                    }, delay);
+                });
+
+                // Unlock after all cards are settled
+                const totalEnterTime = (inCards.length - 1) * ENTER_STAGGER + ENTER_DUR + 80;
+                setTimeout(function() {
+                    rowScrolling[cat] = false;
+                }, totalEnterTime);
+
+            }, totalExitTime);
         }
 
         // ─── Cart ───────────────────────────────────────────────────────────────────
