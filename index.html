@@ -639,7 +639,7 @@
         let activeFilter = 'all';
         let cart = [];
         let lastOrderItems = [];   // snapshot of cart at payment time for success modal
-        let lastOrderSnapshot = []; // copy used by Discord submission
+        let lastOrderSnapshot = []; // copy used by Worker submission
 
         // ─── Load listings ──────────────────────────────────────────────────────────
         async function loadListings() {
@@ -1095,9 +1095,7 @@
 
         document.getElementById('paymentOverlay').addEventListener('click', closePaymentModal);
 
-        // ─── Discord Webhook ────────────────────────────────────────────────────────
-        const DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/1477944422376407133/ggs74lfpXT7L2Ls_3VyZ809ocEq6nKWvdkAEAON_apsFET0H7pYX1Vdrtt40SkO_lvAJ';
-
+        // ─── Submit Order Details ───────────────────────────────────────────────────
         async function submitOrderDetails() {
             const twitch  = document.getElementById('fieldTwitch').value.trim();
             const name    = document.getElementById('fieldName').value.trim();
@@ -1121,56 +1119,19 @@
             btnText.textContent = 'SENDING...';
             spinner.classList.remove('hidden');
 
-            const itemLines = lastOrderSnapshot.map(i => `• ${i.name} — $${i.price.toLocaleString()}`).join('\n');
-            const total = lastOrderSnapshot.reduce((s, i) => s + i.price, 0);
-
-            const fields = [
-                { name: '📦 Items', value: itemLines || 'N/A', inline: false },
-                { name: '💰 Total', value: `$${total.toLocaleString()}`, inline: true },
-                { name: '📅 Time', value: new Date().toLocaleString(), inline: true },
-                { name: '📛 Name', value: name, inline: false },
-                { name: '🏠 Address', value: `${address}\n${city}, ${state} ${zip}`, inline: false },
-            ];
-
-            if (twitch) {
-                fields.unshift({ name: '🎮 Twitch', value: twitch, inline: true });
-            }
-
-            const payload = {
-                embeds: [{
-                    title: twitch ? `New Break Order — ${twitch}` : 'New Break Order',
-                    color: 0x00f3ff,
-                    fields,
-                    footer: { text: 'Daddington77 Break Store' },
-                }]
-            };
-
             try {
-                const resp = await fetch(DISCORD_WEBHOOK, {
+                const resp = await fetch(`${WORKER_URL}/submit-order`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
+                    body: JSON.stringify({ twitch, name, address, city, state, zip, items: lastOrderSnapshot }),
                 });
 
-                if (!resp.ok) throw new Error('Discord error ' + resp.status);
-
-                if (twitch) {
-                    try {
-                        const itemNames = lastOrderSnapshot.map(i => i.name).join(', ');
-                        await fetch(`${WORKER_URL}/queue-order`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ username: twitch, items: itemNames }),
-                        });
-                    } catch (qErr) {
-                        console.warn('Queue order failed (non-fatal):', qErr);
-                    }
-                }
+                if (!resp.ok) throw new Error('Server error');
 
                 closeSuccessModal();
 
             } catch (err) {
-                console.error('Discord webhook error:', err);
+                console.error('Submit order error:', err);
                 errEl.textContent = 'Failed to send — please screenshot this and DM us on Discord.';
                 errEl.classList.remove('hidden');
                 btn.disabled = false;
