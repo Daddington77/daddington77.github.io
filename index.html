@@ -917,7 +917,15 @@
             yugioh:  { label: 'YU-GI-OH', accent: 'from-purple-400 to-pink-500', borderColor: 'rgba(168,85,247,0.5)', glowColor: 'rgba(168,85,247,0.2)' },
         };
 
-        const PAGE_SIZE = 5;
+        // Responsive page size — how many cards to show per row
+        function getPageSize() {
+            if (window.innerWidth < 480)  return 1;
+            if (window.innerWidth < 700)  return 2;
+            if (window.innerWidth < 900)  return 3;
+            if (window.innerWidth < 1100) return 4;
+            return 5;
+        }
+        const PAGE_SIZE = getPageSize();
 
         function cardHTML(card) {
             var stockBadge = card.stock <= 3
@@ -971,11 +979,11 @@
 
                 // Only render the first PAGE_SIZE items on load
                 const initialItems = items.slice(0, PAGE_SIZE);
-                const canScroll = items.length > PAGE_SIZE;
+                const canScroll = items.length > getPageSize();
 
-                // Grid columns: use actual count if fewer than PAGE_SIZE, else PAGE_SIZE
-                const cols = Math.min(items.length, PAGE_SIZE);
-                const gridStyle = `grid-template-columns: repeat(${cols}, 1fr); gap: 20px;`;
+                // Grid columns: responsive based on screen width
+                const visibleCols = Math.min(items.length, getPageSize());
+                const gridStyle = `grid-template-columns: repeat(${visibleCols}, 1fr); gap: 12px;`;
 
                 // Hide scroll buttons if there's nothing to scroll
                 const btnVisibility = canScroll ? '' : 'visibility:hidden; pointer-events:none;';
@@ -1186,6 +1194,7 @@
             const el = document.getElementById('row-' + cat);
             if (!el) return;
             const items = allListings.filter(i => i.game === cat);
+            const PAGE_SIZE = getPageSize();
             if (items.length <= PAGE_SIZE) return;
 
             rowScrolling[cat] = true;
