@@ -674,41 +674,90 @@
         }
 
         function magicCardBackSVG() {
-            // Classic MTG card back — dark blue with the oval and geometric pattern
+            // Faithful MTG card back — blue border, brown oval, 5 color pips, DECKMASTER text
             return `<svg viewBox="0 0 54 76" xmlns="http://www.w3.org/2000/svg" width="54" height="76">
                 <defs>
-                    <radialGradient id="mtgBg" cx="50%" cy="45%" r="65%">
-                        <stop offset="0%" stop-color="#1a3a6e"/>
-                        <stop offset="100%" stop-color="#0a1a40"/>
+                    <radialGradient id="mtgBg" cx="50%" cy="50%" r="70%">
+                        <stop offset="0%" stop-color="#3355cc"/>
+                        <stop offset="100%" stop-color="#112288"/>
                     </radialGradient>
-                    <radialGradient id="mtgOval" cx="50%" cy="45%" r="60%">
-                        <stop offset="0%" stop-color="#c8a044"/>
-                        <stop offset="60%" stop-color="#8b6914"/>
-                        <stop offset="100%" stop-color="#5a4208"/>
+                    <radialGradient id="mtgOval" cx="38%" cy="32%" r="75%">
+                        <stop offset="0%"   stop-color="#ddb86a"/>
+                        <stop offset="45%"  stop-color="#b8904a"/>
+                        <stop offset="100%" stop-color="#7a5520"/>
                     </radialGradient>
+                    <linearGradient id="mtgGoldBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%"   stop-color="#e8d080"/>
+                        <stop offset="50%"  stop-color="#c8a040"/>
+                        <stop offset="100%" stop-color="#a07820"/>
+                    </linearGradient>
                 </defs>
-                <!-- Background -->
-                <rect width="54" height="76" rx="5" fill="url(#mtgBg)"/>
-                <!-- Outer ornate border -->
-                <rect x="2" y="2" width="50" height="72" rx="4" fill="none" stroke="#c8a044" stroke-width="1.5"/>
-                <rect x="4" y="4" width="46" height="68" rx="3" fill="none" stroke="#8b6914" stroke-width="0.5"/>
-                <!-- Central oval -->
-                <ellipse cx="27" cy="38" rx="18" ry="25" fill="url(#mtgOval)" stroke="#c8a044" stroke-width="1.2"/>
-                <!-- Inner oval dark -->
-                <ellipse cx="27" cy="38" rx="14" ry="21" fill="#0d1e4a"/>
-                <!-- The classic MTG "Deckmaster" style central motif — simplified pentagram of colors -->
-                <polygon points="27,20 32,30 43,30 34,37 37,48 27,42 17,48 20,37 11,30 22,30"
-                         fill="none" stroke="#c8a044" stroke-width="0.8" stroke-linejoin="round"/>
-                <!-- Corner flourishes -->
-                <path d="M8,8 Q12,6 14,10" fill="none" stroke="#c8a044" stroke-width="0.8"/>
-                <path d="M46,8 Q42,6 40,10" fill="none" stroke="#c8a044" stroke-width="0.8"/>
-                <path d="M8,68 Q12,70 14,66" fill="none" stroke="#c8a044" stroke-width="0.8"/>
-                <path d="M46,68 Q42,70 40,66" fill="none" stroke="#c8a044" stroke-width="0.8"/>
-                <!-- Shine -->
-                <ellipse cx="16" cy="16" rx="7" ry="4" fill="rgba(200,160,68,0.08)" transform="rotate(-25 16 16)"/>
+
+                <!-- Blue card background -->
+                <rect width="54" height="76" rx="4" fill="url(#mtgBg)"/>
+
+                <!-- Outer gold border -->
+                <rect x="1.5" y="1.5" width="51" height="73" rx="3.5" fill="none"
+                      stroke="url(#mtgGoldBorder)" stroke-width="2.2"/>
+
+                <!-- Inner blue inset line -->
+                <rect x="4" y="4" width="46" height="68" rx="2.5" fill="none"
+                      stroke="rgba(100,140,255,0.4)" stroke-width="0.6"/>
+
+                <!-- Brown oval — the main centerpiece -->
+                <ellipse cx="27" cy="42" rx="19" ry="26" fill="url(#mtgOval)"/>
+                <!-- Oval gold border -->
+                <ellipse cx="27" cy="42" rx="19" ry="26" fill="none"
+                         stroke="url(#mtgGoldBorder)" stroke-width="1.4"/>
+                <!-- Subtle oval inner sheen -->
+                <ellipse cx="22" cy="34" rx="8" ry="5" fill="rgba(255,240,180,0.12)" transform="rotate(-15 22 34)"/>
+
+                <!-- "MAGIC" text — large, ice-blue, slightly arced look via letter spacing -->
+                <text x="27" y="17" text-anchor="middle" font-family="Georgia, serif"
+                      font-size="9.5" font-weight="bold" letter-spacing="1.5"
+                      fill="#a8d8f0" stroke="#2255aa" stroke-width="0.4">MAGIC</text>
+
+                <!-- "The Gathering" text -->
+                <text x="27" y="23.5" text-anchor="middle" font-family="Georgia, serif"
+                      font-size="4.2" font-style="italic" letter-spacing="0.5"
+                      fill="#c8e8ff">The Gathering</text>
+
+                <!-- Superscript TM -->
+                <text x="44.5" y="21" font-family="Arial" font-size="3" fill="#a0c8e8">TM</text>
+
+                <!-- The 5 mana color pips arranged in the classic MTG pattern -->
+                <!-- White pip — top center -->
+                <circle cx="27" cy="33" r="2.8" fill="#f8f4e0" stroke="#c8a040" stroke-width="0.6"/>
+                <circle cx="27" cy="33" r="1.6" fill="#fffde8"/>
+
+                <!-- Blue pip — middle left -->
+                <circle cx="20" cy="40" r="2.8" fill="#2255bb" stroke="#c8a040" stroke-width="0.6"/>
+                <circle cx="20" cy="40" r="1.6" fill="#4488ee"/>
+
+                <!-- Black pip — middle right -->
+                <circle cx="34" cy="40" r="2.8" fill="#222222" stroke="#c8a040" stroke-width="0.6"/>
+                <circle cx="34" cy="40" r="1.6" fill="#555555"/>
+
+                <!-- Red pip — lower left -->
+                <circle cx="22" cy="49" r="2.8" fill="#cc2222" stroke="#c8a040" stroke-width="0.6"/>
+                <circle cx="22" cy="49" r="1.6" fill="#ff5544"/>
+
+                <!-- Green pip — lower right -->
+                <circle cx="32" cy="49" r="2.8" fill="#228833" stroke="#c8a040" stroke-width="0.6"/>
+                <circle cx="32" cy="49" r="1.6" fill="#44bb55"/>
+
+                <!-- DECKMASTER text at bottom of oval -->
+                <text x="27" y="64" text-anchor="middle" font-family="Georgia, serif"
+                      font-size="4.0" font-weight="bold" letter-spacing="1.8"
+                      fill="#c8a040" stroke="#7a5520" stroke-width="0.3">DECKMASTER</text>
+
+                <!-- Corner gold rivets like on real card -->
+                <circle cx="6"  cy="6"  r="1.4" fill="#c8a040" opacity="0.8"/>
+                <circle cx="48" cy="6"  r="1.4" fill="#c8a040" opacity="0.8"/>
+                <circle cx="6"  cy="70" r="1.4" fill="#c8a040" opacity="0.8"/>
+                <circle cx="48" cy="70" r="1.4" fill="#c8a040" opacity="0.8"/>
             </svg>`;
         }
-
         function yugiohCardBackSVG() {
             // Classic YGO card back — dark with Eye of Anubis
             return `<svg viewBox="0 0 54 76" xmlns="http://www.w3.org/2000/svg" width="54" height="76">
@@ -1053,7 +1102,7 @@
             // Force reflow so re-adding works
             void top.offsetWidth;
 
-            const flickClass = dir === 1 ? 'deck-flick-right' : 'deck-flick-left';
+            const flickClass = dir === 1 ? 'deck-flick-left' : 'deck-flick-right';
             top.classList.add(flickClass);
 
             // After flick, snap back invisibly so it's ready for next click
