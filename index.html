@@ -655,22 +655,29 @@
         };
 
         function cardHTML(card) {
-            const stockBadge = card.stock <= 3
-                ? '<div class="absolute top-2 right-2 px-2 py-1 bg-orange-500/80 backdrop-blur-sm text-xs rounded font-bold">' +
-                  (card.stock === 1 ? 'LAST ONE' : card.stock + ' LEFT') + '</div>'
+            var stockBadge = card.stock <= 3
+                ? '<div class="absolute top-2 right-2 px-2 py-1 bg-orange-500/80 backdrop-blur-sm text-xs rounded font-bold">' + (card.stock === 1 ? 'LAST ONE' : card.stock + ' LEFT') + '</div>'
                 : '';
-            return '<div class="flex-shrink-0 w-44 glass rounded-lg overflow-hidden card-hover group border border-white/5 hover:border-white/20" style="scroll-snap-align:start;">' +
-                '<div class="relative overflow-hidden bg-gradient-to-b from-gray-800 to-black" style="aspect-ratio:3/4;">' +
-                '<img src="' + card.image + '" alt="' + card.name + '" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" onerror="this.src=&quot;https://placehold.co/300x400/1a1a2e/ffffff?text=No+Image&quot;">' +
-                '<div class="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-sm text-xs rounded border border-white/10 uppercase font-bold text-gray-300">' + card.condition + '</div>' +
-                stockBadge +
-                '</div>' +
-                '<div class="p-3">' +
-                '<h3 class="font-bold text-gray-200 mb-1 truncate text-sm">' + card.name + '</h3>' +
-                '<div class="flex justify-between items-center">' +
-                '<span class="text-cyan-400 font-orbitron font-bold text-sm">$' + card.price.toLocaleString() + '</span>' +
-                '<button onclick="addToCart(' + card.id + ')" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-cyan-500 hover:text-black transition-all flex items-center justify-center text-lg font-bold leading-none">+</button>' +
-                '</div></div></div>';
+            var img = document.createElement('img');
+            img.src = card.image || 'https://placehold.co/300x400/1a1a2e/ffffff?text=No+Image';
+            img.alt = card.name;
+            img.className = 'w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity';
+            img.onerror = function() { this.src = 'https://placehold.co/300x400/1a1a2e/ffffff?text=No+Image'; };
+            var imgHTML = img.outerHTML;
+            var html = '';
+            html += '<div class="flex-shrink-0 w-44 glass rounded-lg overflow-hidden card-hover group border border-white/5 hover:border-white/20" style="scroll-snap-align:start;">';
+            html += '<div class="relative overflow-hidden bg-gradient-to-b from-gray-800 to-black" style="aspect-ratio:3/4;">';
+            html += imgHTML;
+            html += '<div class="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-sm text-xs rounded border border-white/10 uppercase font-bold text-gray-300">' + card.condition + '</div>';
+            html += stockBadge;
+            html += '</div>';
+            html += '<div class="p-3">';
+            html += '<h3 class="font-bold text-gray-200 mb-1 truncate text-sm">' + card.name + '</h3>';
+            html += '<div class="flex justify-between items-center">';
+            html += '<span class="text-cyan-400 font-orbitron font-bold text-sm">$' + card.price.toLocaleString() + '</span>';
+            html += '<button onclick="addToCart(' + card.id + ')" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-cyan-500 hover:text-black transition-all flex items-center justify-center text-lg font-bold leading-none">+</button>';
+            html += '</div></div></div>';
+            return html;
         }
 
         function renderShop() {
@@ -793,7 +800,6 @@
         document.getElementById('cartBtn').addEventListener('click', toggleCart);
         document.getElementById('mobileMenuBtn').addEventListener('click', () => {
             document.getElementById('mobileMenu').classList.toggle('hidden');
-        });
         });
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
