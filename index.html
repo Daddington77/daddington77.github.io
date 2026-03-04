@@ -1357,12 +1357,12 @@
                 var lastRect = lastCard.getBoundingClientRect();
                 var cardMidY = (firstRect.top + firstRect.bottom) / 2 - rowRect.top - 26;
 
-                // 52px wide button, edge touching card = button center is 26px outside card edge
-                btnLeft.style.left = (firstRect.left - rowRect.left - 26) + 'px';
+                // Button mostly outside card, only ~8px edge overlap
+                btnLeft.style.left = (firstRect.left - rowRect.left - 44) + 'px';
                 btnLeft.style.top = cardMidY + 'px';
                 btnLeft.style.transform = 'translate(0, 0)';
 
-                btnRight.style.left = (lastRect.right - rowRect.left - 26) + 'px';
+                btnRight.style.left = (lastRect.right - rowRect.left - 8) + 'px';
                 btnRight.style.top = cardMidY + 'px';
                 btnRight.style.transform = 'translate(0, 0)';
             });
