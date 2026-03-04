@@ -1195,7 +1195,7 @@
             triggerDeckFlick(cat, dir);
 
             const current = parseInt(el.dataset.offset || '0');
-            const next    = ((current + dir) % items.length + items.length) % items.length;
+            const next    = ((current + dir * PAGE_SIZE) % items.length + items.length) % items.length;
 
             // The button that was clicked is the "deck" origin point
             const deckBtn     = document.getElementById(dir === 1 ? 'btn-right-' + cat : 'btn-left-' + cat);
