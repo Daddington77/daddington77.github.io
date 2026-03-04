@@ -641,121 +641,183 @@
         // ─── Render shop rows ───────────────────────────────────────────────────────
         // ─── Card back SVG designs per category ────────────────────────────────────
         function pokemonCardBackSVG() {
-            // Classic red/white Pokéball design
+            // Faithful Pokémon card back — blue with swirl, Pokéball, mirrored POKÉMON text
             return `<svg viewBox="0 0 54 76" xmlns="http://www.w3.org/2000/svg" width="54" height="76">
                 <defs>
-                    <radialGradient id="pkBg" cx="50%" cy="40%" r="60%">
-                        <stop offset="0%" stop-color="#cc2200"/>
-                        <stop offset="100%" stop-color="#880000"/>
+                    <radialGradient id="pkBg" cx="50%" cy="50%" r="70%">
+                        <stop offset="0%"   stop-color="#5599ee"/>
+                        <stop offset="100%" stop-color="#1144aa"/>
                     </radialGradient>
-                    <radialGradient id="pkBall" cx="50%" cy="40%" r="55%">
-                        <stop offset="0%" stop-color="#ff4422"/>
-                        <stop offset="100%" stop-color="#cc1100"/>
+                    <radialGradient id="pkSwirl" cx="50%" cy="55%" r="60%">
+                        <stop offset="0%"   stop-color="#88ccff"/>
+                        <stop offset="50%"  stop-color="#4488dd"/>
+                        <stop offset="100%" stop-color="#1133aa"/>
+                    </radialGradient>
+                    <radialGradient id="pkBallTop" cx="40%" cy="35%" r="65%">
+                        <stop offset="0%"   stop-color="#ff6644"/>
+                        <stop offset="100%" stop-color="#cc2200"/>
+                    </radialGradient>
+                    <radialGradient id="pkBallBot" cx="40%" cy="30%" r="65%">
+                        <stop offset="0%"   stop-color="#ffffff"/>
+                        <stop offset="100%" stop-color="#cccccc"/>
                     </radialGradient>
                 </defs>
-                <!-- Card bg -->
-                <rect width="54" height="76" rx="5" fill="url(#pkBg)"/>
-                <!-- Top half red -->
-                <rect x="3" y="3" width="48" height="33" rx="3" fill="url(#pkBall)"/>
-                <!-- Bottom half white -->
-                <rect x="3" y="40" width="48" height="33" rx="3" fill="#f0f0f0"/>
-                <!-- Center band -->
-                <rect x="3" y="34" width="48" height="8" fill="#222"/>
-                <!-- Pokéball outer ring -->
-                <circle cx="27" cy="38" r="9" fill="#333" stroke="#555" stroke-width="1"/>
-                <circle cx="27" cy="38" r="6" fill="#fff" stroke="#555" stroke-width="0.5"/>
-                <circle cx="27" cy="38" r="3" fill="#eee" stroke="#aaa" stroke-width="0.5"/>
-                <circle cx="27" cy="38" r="1.5" fill="#ccc"/>
-                <!-- Shine -->
-                <ellipse cx="18" cy="14" rx="6" ry="4" fill="rgba(255,255,255,0.12)" transform="rotate(-20 18 14)"/>
-                <!-- Border -->
-                <rect x="0.5" y="0.5" width="53" height="75" rx="5" fill="none" stroke="rgba(255,200,180,0.3)" stroke-width="1"/>
+
+                <!-- Blue background -->
+                <rect width="54" height="76" rx="4" fill="url(#pkBg)"/>
+
+                <!-- Blue border -->
+                <rect x="1.5" y="1.5" width="51" height="73" rx="3.5" fill="none"
+                      stroke="#1a55cc" stroke-width="2"/>
+                <rect x="3" y="3" width="48" height="70" rx="3" fill="none"
+                      stroke="#88aaff" stroke-width="0.5"/>
+
+                <!-- Swirl rings — concentric arcs to suggest the vortex -->
+                <circle cx="27" cy="44" r="28" fill="none" stroke="rgba(150,200,255,0.18)" stroke-width="3.5"/>
+                <circle cx="27" cy="44" r="22" fill="none" stroke="rgba(150,200,255,0.22)" stroke-width="3"/>
+                <circle cx="27" cy="44" r="16" fill="none" stroke="rgba(180,220,255,0.28)" stroke-width="2.5"/>
+                <circle cx="27" cy="44" r="10" fill="none" stroke="rgba(200,230,255,0.35)" stroke-width="2"/>
+
+                <!-- Pokéball shadow glow -->
+                <circle cx="27" cy="43" r="12" fill="rgba(255,255,255,0.08)"/>
+
+                <!-- Pokéball top half (red) -->
+                <path d="M15,43 A12,12 0 0,1 39,43 Z" fill="url(#pkBallTop)"/>
+                <!-- Pokéball bottom half (white) -->
+                <path d="M15,43 A12,12 0 0,0 39,43 Z" fill="url(#pkBallBot)"/>
+                <!-- Pokéball center band -->
+                <rect x="15" y="41.5" width="24" height="3" fill="#222"/>
+                <!-- Center button outer -->
+                <circle cx="27" cy="43" r="4"   fill="#333" stroke="#111" stroke-width="0.5"/>
+                <!-- Center button inner -->
+                <circle cx="27" cy="43" r="2.5" fill="#eee" stroke="#999" stroke-width="0.4"/>
+                <circle cx="27" cy="43" r="1.2" fill="#fff"/>
+                <!-- Pokéball shine -->
+                <ellipse cx="22" cy="37.5" rx="3" ry="2" fill="rgba(255,255,255,0.35)" transform="rotate(-30 22 37.5)"/>
+
+                <!-- POKÉMON text top — yellow with blue outline, bold -->
+                <text x="27" y="14" text-anchor="middle"
+                      font-family="Arial Black, Impact, sans-serif"
+                      font-size="8.5" font-weight="900" letter-spacing="0.3"
+                      fill="#ffdd00" stroke="#2255cc" stroke-width="1.8"
+                      paint-order="stroke">POKÉMON</text>
+
+                <!-- POKÉMON text bottom — mirrored/upside-down -->
+                <text x="27" y="71" text-anchor="middle"
+                      font-family="Arial Black, Impact, sans-serif"
+                      font-size="8.5" font-weight="900" letter-spacing="0.3"
+                      fill="#ffdd00" stroke="#2255cc" stroke-width="1.8"
+                      paint-order="stroke"
+                      transform="rotate(180 27 67.5)">POKÉMON</text>
             </svg>`;
         }
-
         function magicCardBackSVG() {
-            // Faithful MTG card back — blue border, brown oval, 5 color pips, DECKMASTER text
+            // Faithful MTG card back — dark textured border, brown oval, 5 pips, DECKMASTER
             return `<svg viewBox="0 0 54 76" xmlns="http://www.w3.org/2000/svg" width="54" height="76">
                 <defs>
-                    <radialGradient id="mtgBg" cx="50%" cy="50%" r="70%">
-                        <stop offset="0%" stop-color="#ddb86a"/>
-                        <stop offset="100%" stop-color="#7a5520"/>
+                    <!-- Dark olive/brown outer card background -->
+                    <radialGradient id="mtgBg" cx="50%" cy="50%" r="80%">
+                        <stop offset="0%"   stop-color="#5a4a18"/>
+                        <stop offset="60%"  stop-color="#3a2e0a"/>
+                        <stop offset="100%" stop-color="#1e1800"/>
                     </radialGradient>
+                    <!-- Warm brown oval interior -->
                     <radialGradient id="mtgOval" cx="38%" cy="32%" r="75%">
-                        <stop offset="0%"   stop-color="#ddb86a"/>
-                        <stop offset="45%"  stop-color="#b8904a"/>
-                        <stop offset="100%" stop-color="#7a5520"/>
+                        <stop offset="0%"   stop-color="#d4a060"/>
+                        <stop offset="50%"  stop-color="#a87030"/>
+                        <stop offset="100%" stop-color="#7a4e18"/>
                     </radialGradient>
-                    <linearGradient id="mtgGoldBorder" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%"   stop-color="#e8d080"/>
-                        <stop offset="50%"  stop-color="#c8a040"/>
-                        <stop offset="100%" stop-color="#a07820"/>
+                    <!-- Gold for borders/text -->
+                    <linearGradient id="mtgGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%"   stop-color="#e8d070"/>
+                        <stop offset="50%"  stop-color="#c8980c"/>
+                        <stop offset="100%" stop-color="#a07010"/>
+                    </linearGradient>
+                    <!-- DECKMASTER box bg -->
+                    <linearGradient id="dmBox" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%"   stop-color="#c8a840"/>
+                        <stop offset="100%" stop-color="#7a6010"/>
                     </linearGradient>
                 </defs>
 
-                <!-- Blue card background -->
+                <!-- Dark outer card body -->
                 <rect width="54" height="76" rx="4" fill="url(#mtgBg)"/>
 
-                <!-- Outer gold border -->
-                <rect x="1.5" y="1.5" width="51" height="73" rx="3.5" fill="none"
-                      stroke="url(#mtgGoldBorder)" stroke-width="2.2"/>
+                <!-- Outer gold border frame -->
+                <rect x="1.2" y="1.2" width="51.6" height="73.6" rx="3.5"
+                      fill="none" stroke="url(#mtgGold)" stroke-width="2"/>
 
-                <!-- Inner blue inset line -->
-                <rect x="4" y="4" width="46" height="68" rx="2.5" fill="none"
-                      stroke="rgba(180,120,40,0.4)" stroke-width="0.6"/>
+                <!-- Inner border line (thin, slightly inset) -->
+                <rect x="4" y="4" width="46" height="68" rx="2.5"
+                      fill="none" stroke="#c8980c" stroke-width="0.6"/>
 
-                <!-- Brown oval — the main centerpiece -->
-                <ellipse cx="27" cy="42" rx="19" ry="26" fill="url(#mtgOval)"/>
-                <!-- Oval gold border -->
-                <ellipse cx="27" cy="42" rx="19" ry="26" fill="none"
-                         stroke="url(#mtgGoldBorder)" stroke-width="1.4"/>
-                <!-- Subtle oval inner sheen -->
-                <ellipse cx="22" cy="34" rx="8" ry="5" fill="rgba(255,240,180,0.12)" transform="rotate(-15 22 34)"/>
+                <!-- Brown oval — main centerpiece -->
+                <ellipse cx="27" cy="40" rx="20" ry="28" fill="url(#mtgOval)"/>
+                <!-- Oval purple/dark border (like real card) -->
+                <ellipse cx="27" cy="40" rx="20" ry="28" fill="none"
+                         stroke="#4a3880" stroke-width="1.8"/>
+                <!-- Oval gold outer ring -->
+                <ellipse cx="27" cy="40" rx="20" ry="28" fill="none"
+                         stroke="#c8980c" stroke-width="0.5"/>
+                <!-- Oval inner subtle sheen -->
+                <ellipse cx="21" cy="31" rx="7" ry="4.5"
+                         fill="rgba(255,230,160,0.13)" transform="rotate(-20 21 31)"/>
 
-                <!-- "MAGIC" text — large, ice-blue, slightly arced look via letter spacing -->
-                <text x="27" y="17" text-anchor="middle" font-family="Georgia, serif"
-                      font-size="9.5" font-weight="bold" letter-spacing="1.5"
-                      fill="#a8d8f0" stroke="#2255aa" stroke-width="0.4">MAGIC</text>
+                <!-- MAGIC text — large, in the classic icy-blue style -->
+                <text x="27" y="18" text-anchor="middle"
+                      font-family="Georgia, 'Times New Roman', serif"
+                      font-size="11" font-weight="bold" letter-spacing="1"
+                      fill="#a8d8f8" stroke="#204080" stroke-width="0.6"
+                      paint-order="stroke">MAGIC</text>
 
-                <!-- "The Gathering" text -->
-                <text x="27" y="23.5" text-anchor="middle" font-family="Georgia, serif"
-                      font-size="4.2" font-style="italic" letter-spacing="0.5"
-                      fill="#c8e8ff">The Gathering</text>
+                <!-- "The Gathering" italic below -->
+                <text x="27" y="24" text-anchor="middle"
+                      font-family="Georgia, 'Times New Roman', serif"
+                      font-size="4" font-style="italic" letter-spacing="0.6"
+                      fill="#d8eeff">The Gathering</text>
+                <!-- TM superscript -->
+                <text x="45.5" y="21.5" font-family="Arial" font-size="2.8"
+                      fill="#a0c8e8">TM</text>
 
-                <!-- Superscript TM -->
-                <text x="44.5" y="21" font-family="Arial" font-size="3" fill="#a0c8e8">TM</text>
+                <!-- 5 mana pips — classic diamond pattern -->
+                <!-- White — top -->
+                <circle cx="27"   cy="33"  r="3"   fill="#f8f4e0" stroke="#b09030" stroke-width="0.7"/>
+                <circle cx="27"   cy="33"  r="1.8" fill="#fffde8"/>
+                <circle cx="25.8" cy="32"  r="0.7" fill="rgba(255,255,255,0.8)"/>
 
-                <!-- The 5 mana color pips arranged in the classic MTG pattern -->
-                <!-- White pip — top center -->
-                <circle cx="27" cy="33" r="2.8" fill="#f8f4e0" stroke="#c8a040" stroke-width="0.6"/>
-                <circle cx="27" cy="33" r="1.6" fill="#fffde8"/>
+                <!-- Green — mid left -->
+                <circle cx="20"   cy="40"  r="3"   fill="#226622" stroke="#b09030" stroke-width="0.7"/>
+                <circle cx="20"   cy="40"  r="1.8" fill="#44aa44"/>
+                <circle cx="18.8" cy="39"  r="0.7" fill="rgba(255,255,255,0.5)"/>
 
-                <!-- Blue pip — middle left -->
-                <circle cx="20" cy="40" r="2.8" fill="#2255bb" stroke="#c8a040" stroke-width="0.6"/>
-                <circle cx="20" cy="40" r="1.6" fill="#4488ee"/>
+                <!-- Blue — mid right -->
+                <circle cx="34"   cy="40"  r="3"   fill="#1144bb" stroke="#b09030" stroke-width="0.7"/>
+                <circle cx="34"   cy="40"  r="1.8" fill="#4488ee"/>
+                <circle cx="32.8" cy="39"  r="0.7" fill="rgba(255,255,255,0.5)"/>
 
-                <!-- Black pip — middle right -->
-                <circle cx="34" cy="40" r="2.8" fill="#222222" stroke="#c8a040" stroke-width="0.6"/>
-                <circle cx="34" cy="40" r="1.6" fill="#555555"/>
+                <!-- Red — lower left -->
+                <circle cx="22"   cy="48"  r="3"   fill="#bb2211" stroke="#b09030" stroke-width="0.7"/>
+                <circle cx="22"   cy="48"  r="1.8" fill="#ee4433"/>
+                <circle cx="20.8" cy="47"  r="0.7" fill="rgba(255,255,255,0.5)"/>
 
-                <!-- Red pip — lower left -->
-                <circle cx="22" cy="49" r="2.8" fill="#cc2222" stroke="#c8a040" stroke-width="0.6"/>
-                <circle cx="22" cy="49" r="1.6" fill="#ff5544"/>
+                <!-- Black — lower right -->
+                <circle cx="32"   cy="48"  r="3"   fill="#1a1a1a" stroke="#b09030" stroke-width="0.7"/>
+                <circle cx="32"   cy="48"  r="1.8" fill="#444444"/>
+                <circle cx="30.8" cy="47"  r="0.7" fill="rgba(255,255,255,0.3)"/>
 
-                <!-- Green pip — lower right -->
-                <circle cx="32" cy="49" r="2.8" fill="#228833" stroke="#c8a040" stroke-width="0.6"/>
-                <circle cx="32" cy="49" r="1.6" fill="#44bb55"/>
+                <!-- DECKMASTER box at bottom of oval -->
+                <rect x="13" y="61" width="28" height="7" rx="1.5"
+                      fill="url(#dmBox)" stroke="#c8980c" stroke-width="0.7"/>
+                <text x="27" y="66.5" text-anchor="middle"
+                      font-family="Georgia, serif"
+                      font-size="3.8" font-weight="bold" letter-spacing="1.6"
+                      fill="#1a1200">DECKMASTER</text>
 
-                <!-- DECKMASTER text at bottom of oval -->
-                <text x="27" y="64" text-anchor="middle" font-family="Georgia, serif"
-                      font-size="4.0" font-weight="bold" letter-spacing="1.8"
-                      fill="#c8a040" stroke="#7a5520" stroke-width="0.3">DECKMASTER</text>
-
-                <!-- Corner gold rivets like on real card -->
-                <circle cx="6"  cy="6"  r="1.4" fill="#c8a040" opacity="0.8"/>
-                <circle cx="48" cy="6"  r="1.4" fill="#c8a040" opacity="0.8"/>
-                <circle cx="6"  cy="70" r="1.4" fill="#c8a040" opacity="0.8"/>
-                <circle cx="48" cy="70" r="1.4" fill="#c8a040" opacity="0.8"/>
+                <!-- Corner gold rivets -->
+                <circle cx="6.5" cy="6.5"  r="1.8" fill="#c8980c" stroke="#7a5500" stroke-width="0.4"/>
+                <circle cx="47.5" cy="6.5" r="1.8" fill="#c8980c" stroke="#7a5500" stroke-width="0.4"/>
+                <circle cx="6.5" cy="69.5" r="1.8" fill="#c8980c" stroke="#7a5500" stroke-width="0.4"/>
+                <circle cx="47.5" cy="69.5" r="1.8" fill="#c8980c" stroke="#7a5500" stroke-width="0.4"/>
             </svg>`;
         }
         function yugiohCardBackSVG() {
