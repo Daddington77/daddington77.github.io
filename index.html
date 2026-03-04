@@ -736,8 +736,16 @@
                              style="scroll-snap-type:x mandatory; scrollbar-width:none; -ms-overflow-style:none;">
                             ${items.map(cardHTML).join('')}
                         </div>
-                        <!-- bottom fade divider -->
-                        <div class="absolute bottom-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);"></div>
+                        <!-- bottom decorative divider -->
+                        <div class="mt-8 relative flex items-center gap-4">
+                            <div class="flex-1 h-px" style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15));"></div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-1.5 h-1.5 rounded-full" style="background: var(--neon-cyan); box-shadow: 0 0 6px var(--neon-cyan);"></div>
+                                <div class="w-2.5 h-2.5 rounded-full" style="background: var(--neon-purple); box-shadow: 0 0 8px var(--neon-purple);"></div>
+                                <div class="w-1.5 h-1.5 rounded-full" style="background: var(--neon-green); box-shadow: 0 0 6px var(--neon-green);"></div>
+                            </div>
+                            <div class="flex-1 h-px" style="background: linear-gradient(90deg, rgba(255,255,255,0.15), transparent);"></div>
+                        </div>
                     </div>
                 `;
             }).join('');
