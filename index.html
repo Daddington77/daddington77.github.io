@@ -735,7 +735,77 @@
             if (typeof lucide !== "undefined") lucide.createIcons();
         }
 
-        // ─── Scroll rows — cinematic staggered animation ────────────────────────────
+        // ─── Web Audio — crisp card flick (thwip) ──────────────────────────────────
+        let _audioCtx = null;
+        function getAudioCtx() {
+            if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            return _audioCtx;
+        }
+
+        function playCardFlick(delayMs) {
+            // Synthesise a short "thwip" — noise burst shaped like a card snap
+            setTimeout(function() {
+                try {
+                    const ctx    = getAudioCtx();
+                    const now    = ctx.currentTime;
+                    const dur    = 0.055; // seconds — short and snappy
+
+                    // White noise buffer
+                    const bufLen = Math.ceil(ctx.sampleRate * dur);
+                    const buf    = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+                    const data   = buf.getChannelData(0);
+                    for (let i = 0; i < bufLen; i++) {
+                        data[i] = (Math.random() * 2 - 1);
+                    }
+
+                    const noise  = ctx.createBufferSource();
+                    noise.buffer = buf;
+
+                    // Band-pass — card "thwip" lives around 2–6 kHz
+                    const bp     = ctx.createBiquadFilter();
+                    bp.type      = 'bandpass';
+                    bp.frequency.setValueAtTime(3800, now);
+                    bp.frequency.linearRampToValueAtTime(1200, now + dur);
+                    bp.Q.value   = 0.9;
+
+                    // High-pass to cut low rumble
+                    const hp     = ctx.createBiquadFilter();
+                    hp.type      = 'highpass';
+                    hp.frequency.value = 900;
+
+                    // Amplitude envelope — sharp attack, fast decay
+                    const gain   = ctx.createGain();
+                    gain.gain.setValueAtTime(0,    now);
+                    gain.gain.linearRampToValueAtTime(0.32, now + 0.003);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+                    // A tiny pitch-down "thock" tone underneath for body
+                    const osc    = ctx.createOscillator();
+                    osc.type     = 'triangle';
+                    osc.frequency.setValueAtTime(420, now);
+                    osc.frequency.exponentialRampToValueAtTime(180, now + 0.04);
+                    const ogain  = ctx.createGain();
+                    ogain.gain.setValueAtTime(0,    now);
+                    ogain.gain.linearRampToValueAtTime(0.18, now + 0.004);
+                    ogain.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
+
+                    noise.connect(bp);
+                    bp.connect(hp);
+                    hp.connect(gain);
+                    gain.connect(ctx.destination);
+
+                    osc.connect(ogain);
+                    ogain.connect(ctx.destination);
+
+                    noise.start(now);
+                    noise.stop(now + dur);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } catch(e) { /* audio not available — silently skip */ }
+            }, delayMs);
+        }
+
+        // ─── Scroll rows — card dealing animation ──────────────────────────────────
         var rowScrolling = {};
 
         function scrollRow(cat, dir) {
@@ -750,96 +820,145 @@
             const current = parseInt(el.dataset.offset || '0');
             const next    = ((current + dir) % items.length + items.length) % items.length;
 
+            // The button that was clicked is the "deck" origin point
+            const deckBtn     = document.getElementById(dir === 1 ? 'btn-right-' + cat : 'btn-left-' + cat);
+            const deckBtnRect = deckBtn ? deckBtn.getBoundingClientRect() : null;
+            const rowRect     = el.getBoundingClientRect();
+
             // Build incoming card list
             const incoming = [];
             for (let i = 0; i < PAGE_SIZE; i++) {
                 incoming.push(items[(next + i) % items.length]);
             }
 
-            // ── PHASE 1: stagger-exit existing cards ──────────────────────────────
-            const outCards = Array.from(el.children);
-            const STAGGER   = 55;   // ms between each card starting its exit
-            const EXIT_DUR  = 320;  // ms for one card to exit
-            const tiltDir   = dir;  // 1 = exit left, -1 = exit right
+            // ── PHASE 1: cards snap back to the deck button ───────────────────────
+            const outCards  = Array.from(el.children);
+            const SNAP_STAGGER = 45;  // ms between each card starting its snap-back
+            const SNAP_DUR     = 260; // ms to snap back
 
+            // Snap order: card closest to the button exits first
+            // dir=1 (right button clicked) → rightmost card (last) exits first
+            // dir=-1 (left button clicked) → leftmost card (first) exits first
             outCards.forEach(function(card, i) {
-                // Slightly different delay per card — leading edge exits first
-                const delay = dir === 1 ? i * STAGGER : (outCards.length - 1 - i) * STAGGER;
+                const snapOrder = dir === 1 ? (outCards.length - 1 - i) : i;
+                const delay     = snapOrder * SNAP_STAGGER;
+
+                // Compute where this card needs to travel to reach the deck button
+                let tx = 0, ty = 0;
+                if (deckBtnRect && rowRect) {
+                    const cardRect = card.getBoundingClientRect();
+                    const cardCX   = cardRect.left + cardRect.width  / 2;
+                    const cardCY   = cardRect.top  + cardRect.height / 2;
+                    const deckCX   = deckBtnRect.left + deckBtnRect.width  / 2;
+                    const deckCY   = deckBtnRect.top  + deckBtnRect.height / 2;
+                    tx = deckCX - cardCX;
+                    ty = deckCY - cardCY;
+                } else {
+                    tx = dir * 120 + '%';
+                    ty = 0;
+                }
+
                 card.style.transition = 'none';
-                card.style.transformOrigin = 'center bottom';
+                card.style.transformOrigin = 'center center';
+                card.style.zIndex = snapOrder; // closer cards stack on top as they arrive
 
                 setTimeout(function() {
+                    // Play the snap-back flick sound
+                    playCardFlick(0);
+
                     card.style.transition =
-                        'transform ' + EXIT_DUR + 'ms cubic-bezier(0.4,0,1,1), ' +
-                        'opacity '   + EXIT_DUR + 'ms ease, ' +
-                        'filter '    + EXIT_DUR + 'ms ease';
+                        'transform ' + SNAP_DUR + 'ms cubic-bezier(0.55,0,1,0.7), ' +
+                        'opacity '   + (SNAP_DUR * 0.6) + 'ms ease ' + (SNAP_DUR * 0.3) + 'ms, ' +
+                        'filter '    + SNAP_DUR + 'ms ease';
+                    // Arc toward the deck: translate to button, slight rotation & shrink
+                    const spinDeg = dir === 1 ? -15 : 15;
                     card.style.transform =
-                        'translateX(' + (tiltDir * 110) + '%) ' +
-                        'translateY(-12px) ' +
-                        'rotate('     + (tiltDir * (4 + i * 1.5)) + 'deg) ' +
-                        'scale(0.82)';
+                        'translate(' + tx + 'px, ' + ty + 'px) ' +
+                        'rotate(' + spinDeg + 'deg) ' +
+                        'scale(0.35)';
                     card.style.opacity = '0';
-                    card.style.filter  = 'blur(3px)';
+                    card.style.filter  = 'blur(2px)';
                 }, delay);
             });
 
-            // Total time for all cards to finish exiting
-            const totalExitTime = (outCards.length - 1) * STAGGER + EXIT_DUR + 30;
+            // Wait for all snap-backs to finish
+            const totalSnapTime = (outCards.length - 1) * SNAP_STAGGER + SNAP_DUR + 40;
 
-            // ── PHASE 2: swap content & stagger-enter new cards ───────────────────
+            // ── PHASE 2: deal new cards from the deck button ──────────────────────
             setTimeout(function() {
-                // Swap in new HTML
                 el.innerHTML = incoming.map(cardHTML).join('');
                 el.dataset.offset = next;
                 if (typeof lucide !== 'undefined') lucide.createIcons();
 
-                const inCards = Array.from(el.children);
-                const ENTER_STAGGER = 70;
-                const ENTER_DUR     = 420;
-                const enterFrom     = dir; // come in from the opposite side
+                const inCards       = Array.from(el.children);
+                const DEAL_STAGGER  = 80;  // ms between each card being dealt
+                const DEAL_DUR      = 400; // ms for each card to land
 
-                // Set starting state for all incoming cards (off-screen)
-                inCards.forEach(function(card) {
-                    card.style.transition = 'none';
-                    card.style.transformOrigin = 'center bottom';
+                // Start all cards at the deck button position, face-down / tiny
+                inCards.forEach(function(card, i) {
+                    let startX = 0, startY = 0;
+                    if (deckBtnRect) {
+                        const cardRect = card.getBoundingClientRect();
+                        const cardCX   = cardRect.left + cardRect.width  / 2;
+                        const cardCY   = cardRect.top  + cardRect.height / 2;
+                        const deckCX   = deckBtnRect.left + deckBtnRect.width  / 2;
+                        const deckCY   = deckBtnRect.top  + deckBtnRect.height / 2;
+                        startX = deckCX - cardCX;
+                        startY = deckCY - cardCY;
+                    } else {
+                        startX = dir * -110 + '%';
+                        startY = 0;
+                    }
+
+                    card.style.transition  = 'none';
+                    card.style.transformOrigin = 'center center';
+                    card.style.zIndex = i;
+                    // Begin at deck position — small, rotated
+                    const startSpin = dir === 1 ? 20 : -20;
                     card.style.transform =
-                        'translateX(' + (-enterFrom * 80) + '%) ' +
-                        'translateY(20px) ' +
-                        'rotate(' + (-enterFrom * 8) + 'deg) ' +
-                        'scale(0.75)';
+                        'translate(' + startX + 'px, ' + startY + 'px) ' +
+                        'rotate(' + startSpin + 'deg) ' +
+                        'scale(0.25)';
                     card.style.opacity = '0';
-                    card.style.filter  = 'blur(6px)';
+                    card.style.filter  = 'blur(4px)';
                 });
 
-                // Stagger each card into place with a springy bounce
+                // Deal each card out with a satisfying arc and thwip
+                // dir=1 (right button) → deal left-to-right starting from rightmost slot
+                // dir=-1 (left button) → deal right-to-left starting from leftmost slot
                 inCards.forEach(function(card, i) {
-                    const delay = dir === 1 ? i * ENTER_STAGGER : (inCards.length - 1 - i) * ENTER_STAGGER;
+                    const dealOrder = dir === 1 ? (inCards.length - 1 - i) : i;
+                    const delay     = dealOrder * DEAL_STAGGER;
+
                     setTimeout(function() {
+                        // Play the deal flick sound as each card lands
+                        playCardFlick(DEAL_DUR * 0.55); // sound hits at peak of arc
+
                         card.style.transition =
-                            'transform ' + ENTER_DUR + 'ms cubic-bezier(0.34,1.48,0.64,1), ' +
-                            'opacity '   + (ENTER_DUR * 0.7) + 'ms ease, ' +
-                            'filter '    + (ENTER_DUR * 0.6) + 'ms ease';
-                        card.style.transform = 'translateX(0) translateY(0) rotate(0deg) scale(1)';
+                            'transform ' + DEAL_DUR + 'ms cubic-bezier(0.22,1.4,0.58,1), ' +
+                            'opacity '   + (DEAL_DUR * 0.4) + 'ms ease, ' +
+                            'filter '    + (DEAL_DUR * 0.5) + 'ms ease';
+                        card.style.transform = 'translate(0,0) rotate(0deg) scale(1)';
                         card.style.opacity   = '1';
                         card.style.filter    = 'blur(0px)';
 
-                        // Clean up inline styles after animation
                         setTimeout(function() {
-                            card.style.transition = '';
-                            card.style.transform  = '';
-                            card.style.opacity    = '';
-                            card.style.filter     = '';
-                        }, ENTER_DUR + 50);
+                            card.style.transition  = '';
+                            card.style.transform   = '';
+                            card.style.opacity     = '';
+                            card.style.filter      = '';
+                            card.style.zIndex      = '';
+                        }, DEAL_DUR + 60);
                     }, delay);
                 });
 
-                // Unlock after all cards are settled
-                const totalEnterTime = (inCards.length - 1) * ENTER_STAGGER + ENTER_DUR + 80;
+                // Unlock after all cards are dealt and settled
+                const totalDealTime = (inCards.length - 1) * DEAL_STAGGER + DEAL_DUR + 100;
                 setTimeout(function() {
                     rowScrolling[cat] = false;
-                }, totalEnterTime);
+                }, totalDealTime);
 
-            }, totalExitTime);
+            }, totalSnapTime);
         }
 
         // ─── Cart ───────────────────────────────────────────────────────────────────
