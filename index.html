@@ -115,7 +115,6 @@
             flex-shrink: 0;
             position: relative;
             width: 54px;
-            /* height is determined by the stacked card layers */
             display: flex;
             align-items: flex-end;
             justify-content: center;
@@ -130,7 +129,6 @@
         .row-nav-btn:hover .deck-top { transform: translateY(-4px) rotate(-1deg); }
         .row-nav-btn.hidden-btn { visibility: hidden; pointer-events: none; }
 
-        /* Individual card layers in the deck */
         .deck-card {
             position: absolute;
             width: 54px;
@@ -142,7 +140,7 @@
             backface-visibility: hidden;
         }
         .deck-top {
-            position: relative;   /* top card is in-flow so button has natural height */
+            position: relative;
             width: 54px;
             height: 76px;
             border-radius: 5px;
@@ -152,7 +150,6 @@
             transition: transform 0.2s cubic-bezier(0.34,1.5,0.64,1);
             z-index: 4;
         }
-        /* Flick animation — top card launches off the deck */
         @keyframes deckFlickLeft {
             0%   { transform: translate(0,0) rotate(0deg) scale(1); opacity:1; }
             60%  { transform: translate(-160px,-30px) rotate(-18deg) scale(0.85); opacity:0.7; }
@@ -620,42 +617,113 @@
         let lastOrderItems = [];
         let lastOrderSnapshot = [];
 
-        // ─── Load listings + merge live stock from Worker KV ───────────────────────
-        async function loadListings() {
+        // ─── Stripe / Worker URL (needed before loadListings) ──────────────────────
+        const WORKER_URL = 'https://dadcheckout.juggaloateyourdog.workers.dev';
+        const STRIPE_PUBLISHABLE_KEY = 'pk_live_51T6NVfFQVMSqOCYO3pQ8TNsm6uGja3rFLcY8c8eosYLAvhCvHWvsSm4w5G2x31zn7SLdiF9essSWFPSwEhY5oRUH00s5bOdvPM';
+
+        // ─── Load listings + polling ────────────────────────────────────────────────
+        const POLL_INTERVAL_MS = 30000; // re-check every 30 seconds
+        let pollTimer = null;
+
+        async function fetchMergedListings() {
+            // Append timestamp to both URLs to bust browser/CDN cache every time
+            const [listingsResp, stockResp] = await Promise.all([
+                fetch('/data/listings.json?' + Date.now()),
+                fetch(`${WORKER_URL}/stock?` + Date.now()).catch(() => null),
+            ]);
+            if (!listingsResp.ok) throw new Error('listings.json not found');
+            const data = await listingsResp.json();
+            let liveStock = null;
+            if (stockResp && stockResp.ok) liveStock = await stockResp.json();
+
+            return data.listings
+                .map(item => {
+                    if (liveStock && liveStock[String(item.id)] !== undefined) {
+                        return { ...item, stock: liveStock[String(item.id)] };
+                    }
+                    return item;
+                })
+                .filter(item => item.stock > 0);
+        }
+
+        // Lightweight fingerprint — detects any id/stock change without deep compare
+        function listingsFingerprint(listings) {
+            return listings.map(i => i.id + ':' + i.stock).join('|');
+        }
+
+        function showUpdateToast() {
+            const old = document.getElementById('shopUpdateToast');
+            if (old) old.remove();
+
+            const toast = document.createElement('div');
+            toast.id = 'shopUpdateToast';
+            toast.style.cssText = [
+                'position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);',
+                'z-index:9999;background:rgba(10,10,20,0.95);',
+                'border:1px solid rgba(0,243,255,0.4);border-radius:12px;',
+                'padding:10px 20px;font-size:13px;font-weight:600;',
+                'color:#00f3ff;display:flex;align-items:center;gap:8px;',
+                'box-shadow:0 0 24px rgba(0,243,255,0.2);',
+                'transition:opacity 0.4s ease,transform 0.4s ease;',
+                'opacity:0;'
+            ].join('');
+            toast.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#39ff14;flex-shrink:0;box-shadow:0 0 6px #39ff14;"></span>&nbsp;Shop updated';
+            document.body.appendChild(toast);
+
+            // Animate in on next two frames to ensure transition fires
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    toast.style.opacity = '1';
+                    toast.style.transform = 'translateX(-50%) translateY(0)';
+                });
+            });
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(10px)';
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
+        async function loadListings(isInitial = true) {
             try {
-                // Fetch listings and live stock in parallel
-                const [listingsResp, stockResp] = await Promise.all([
-                    fetch('/data/listings.json'),
-                    fetch(`${WORKER_URL}/stock`).catch(() => null),
-                ]);
+                const fresh = await fetchMergedListings();
 
-                if (!listingsResp.ok) throw new Error('listings.json not found');
-                const data = await listingsResp.json();
-
-                // Merge live stock counts from KV if available
-                let liveStock = null;
-                if (stockResp && stockResp.ok) {
-                    liveStock = await stockResp.json();
+                if (isInitial) {
+                    // First load — render immediately
+                    allListings = fresh;
+                    renderShop();
+                    setTimeout(initRowDividers, 50);
+                } else {
+                    // Background poll — only re-render if data actually changed
+                    const oldFP = listingsFingerprint(allListings);
+                    const newFP = listingsFingerprint(fresh);
+                    if (oldFP !== newFP) {
+                        allListings = fresh;
+                        renderShop();
+                        setTimeout(initRowDividers, 50);
+                        showUpdateToast();
+                    }
                 }
-
-                allListings = data.listings
-                    .map(item => {
-                        // If KV has a stock entry for this item, use it — otherwise fall back to listings.json
-                        if (liveStock && liveStock[String(item.id)] !== undefined) {
-                            return { ...item, stock: liveStock[String(item.id)] };
-                        }
-                        return item;
-                    })
-                    .filter(item => item.stock > 0);
-
-                renderShop();
-                setTimeout(initRowDividers, 50);
             } catch (err) {
-                console.error('Failed to load listings:', err);
-                document.getElementById('shopLoading').classList.add('hidden');
-                document.getElementById('shopEmpty').classList.remove('hidden');
+                if (isInitial) {
+                    console.error('Failed to load listings:', err);
+                    document.getElementById('shopLoading').classList.add('hidden');
+                    document.getElementById('shopEmpty').classList.remove('hidden');
+                }
+                // Background poll failures are silent — don't disrupt the user
             }
         }
+
+        function startPolling() {
+            if (pollTimer) clearInterval(pollTimer);
+            pollTimer = setInterval(() => loadListings(false), POLL_INTERVAL_MS);
+        }
+
+        // Immediately re-check when the user comes back to the tab
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') loadListings(false);
+        });
 
         // ─── Render shop rows ───────────────────────────────────────────────────────
         // ─── Card back SVG designs per category ────────────────────────────────────
@@ -731,108 +799,55 @@
             </svg>`;
         }
         function magicCardBackSVG() {
-            // Faithful MTG card back — dark textured border, brown oval, 5 pips, DECKMASTER
             return `<svg viewBox="0 0 54 76" xmlns="http://www.w3.org/2000/svg" width="54" height="76">
                 <defs>
-                    <!-- Dark olive/brown outer card background -->
                     <radialGradient id="mtgBg" cx="50%" cy="50%" r="80%">
                         <stop offset="0%"   stop-color="#5a4a18"/>
                         <stop offset="60%"  stop-color="#3a2e0a"/>
                         <stop offset="100%" stop-color="#1e1800"/>
                     </radialGradient>
-                    <!-- Warm brown oval interior -->
                     <radialGradient id="mtgOval" cx="38%" cy="32%" r="75%">
                         <stop offset="0%"   stop-color="#d4a060"/>
                         <stop offset="50%"  stop-color="#a87030"/>
                         <stop offset="100%" stop-color="#7a4e18"/>
                     </radialGradient>
-                    <!-- Gold for borders/text -->
                     <linearGradient id="mtgGold" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%"   stop-color="#e8d070"/>
                         <stop offset="50%"  stop-color="#c8980c"/>
                         <stop offset="100%" stop-color="#a07010"/>
                     </linearGradient>
-                    <!-- DECKMASTER box bg -->
                     <linearGradient id="dmBox" x1="0%" y1="0%" x2="0%" y2="100%">
                         <stop offset="0%"   stop-color="#c8a840"/>
                         <stop offset="100%" stop-color="#7a6010"/>
                     </linearGradient>
                 </defs>
-
-                <!-- Dark outer card body -->
                 <rect width="54" height="76" rx="4" fill="url(#mtgBg)"/>
-
-                <!-- Outer gold border frame -->
-                <rect x="1.2" y="1.2" width="51.6" height="73.6" rx="3.5"
-                      fill="none" stroke="url(#mtgGold)" stroke-width="2"/>
-
-                <!-- Inner border line (thin, slightly inset) -->
-                <rect x="4" y="4" width="46" height="68" rx="2.5"
-                      fill="none" stroke="#c8980c" stroke-width="0.6"/>
-
-                <!-- Brown oval — main centerpiece -->
+                <rect x="1.2" y="1.2" width="51.6" height="73.6" rx="3.5" fill="none" stroke="url(#mtgGold)" stroke-width="2"/>
+                <rect x="4" y="4" width="46" height="68" rx="2.5" fill="none" stroke="#c8980c" stroke-width="0.6"/>
                 <ellipse cx="27" cy="40" rx="20" ry="28" fill="url(#mtgOval)"/>
-                <!-- Oval purple/dark border (like real card) -->
-                <ellipse cx="27" cy="40" rx="20" ry="28" fill="none"
-                         stroke="#4a3880" stroke-width="1.8"/>
-                <!-- Oval gold outer ring -->
-                <ellipse cx="27" cy="40" rx="20" ry="28" fill="none"
-                         stroke="#c8980c" stroke-width="0.5"/>
-                <!-- Oval inner subtle sheen -->
-                <ellipse cx="21" cy="31" rx="7" ry="4.5"
-                         fill="rgba(255,230,160,0.13)" transform="rotate(-20 21 31)"/>
-
-                <!-- MAGIC text — large, in the classic icy-blue style -->
-                <text x="27" y="18" text-anchor="middle"
-                      font-family="Georgia, 'Times New Roman', serif"
-                      font-size="11" font-weight="bold" letter-spacing="1"
-                      fill="#a8d8f8" stroke="#204080" stroke-width="0.6"
-                      paint-order="stroke">MAGIC</text>
-
-                <!-- "The Gathering" italic below -->
-                <text x="27" y="24" text-anchor="middle"
-                      font-family="Georgia, 'Times New Roman', serif"
-                      font-size="4" font-style="italic" letter-spacing="0.6"
-                      fill="#d8eeff">The Gathering</text>
-                <!-- TM superscript -->
-                <text x="45.5" y="21.5" font-family="Arial" font-size="2.8"
-                      fill="#a0c8e8">TM</text>
-
-                <!-- 5 mana pips — classic diamond pattern -->
-                <!-- White — top -->
+                <ellipse cx="27" cy="40" rx="20" ry="28" fill="none" stroke="#4a3880" stroke-width="1.8"/>
+                <ellipse cx="27" cy="40" rx="20" ry="28" fill="none" stroke="#c8980c" stroke-width="0.5"/>
+                <ellipse cx="21" cy="31" rx="7" ry="4.5" fill="rgba(255,230,160,0.13)" transform="rotate(-20 21 31)"/>
+                <text x="27" y="18" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="11" font-weight="bold" letter-spacing="1" fill="#a8d8f8" stroke="#204080" stroke-width="0.6" paint-order="stroke">MAGIC</text>
+                <text x="27" y="24" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="4" font-style="italic" letter-spacing="0.6" fill="#d8eeff">The Gathering</text>
+                <text x="45.5" y="21.5" font-family="Arial" font-size="2.8" fill="#a0c8e8">TM</text>
                 <circle cx="27"   cy="33"  r="3"   fill="#f8f4e0" stroke="#b09030" stroke-width="0.7"/>
                 <circle cx="27"   cy="33"  r="1.8" fill="#fffde8"/>
                 <circle cx="25.8" cy="32"  r="0.7" fill="rgba(255,255,255,0.8)"/>
-
-                <!-- Green — mid left -->
                 <circle cx="20"   cy="40"  r="3"   fill="#226622" stroke="#b09030" stroke-width="0.7"/>
                 <circle cx="20"   cy="40"  r="1.8" fill="#44aa44"/>
                 <circle cx="18.8" cy="39"  r="0.7" fill="rgba(255,255,255,0.5)"/>
-
-                <!-- Blue — mid right -->
                 <circle cx="34"   cy="40"  r="3"   fill="#1144bb" stroke="#b09030" stroke-width="0.7"/>
                 <circle cx="34"   cy="40"  r="1.8" fill="#4488ee"/>
                 <circle cx="32.8" cy="39"  r="0.7" fill="rgba(255,255,255,0.5)"/>
-
-                <!-- Red — lower left -->
                 <circle cx="22"   cy="48"  r="3"   fill="#bb2211" stroke="#b09030" stroke-width="0.7"/>
                 <circle cx="22"   cy="48"  r="1.8" fill="#ee4433"/>
                 <circle cx="20.8" cy="47"  r="0.7" fill="rgba(255,255,255,0.5)"/>
-
-                <!-- Black — lower right -->
                 <circle cx="32"   cy="48"  r="3"   fill="#1a1a1a" stroke="#b09030" stroke-width="0.7"/>
                 <circle cx="32"   cy="48"  r="1.8" fill="#444444"/>
                 <circle cx="30.8" cy="47"  r="0.7" fill="rgba(255,255,255,0.3)"/>
-
-                <!-- DECKMASTER box — snug at bottom of oval, not overlapping content -->
-                <rect x="11" y="63" width="32" height="5.5" rx="1"
-                      fill="url(#dmBox)" stroke="#c8980c" stroke-width="0.6"/>
-                <text x="27" y="67.2" text-anchor="middle"
-                      font-family="Georgia, serif"
-                      font-size="3.4" font-weight="bold" letter-spacing="0.4"
-                      fill="#1a1200">DECKMASTER</text>
-
-                <!-- Corner gold rivets -->
+                <rect x="11" y="63" width="32" height="5.5" rx="1" fill="url(#dmBox)" stroke="#c8980c" stroke-width="0.6"/>
+                <text x="27" y="67.2" text-anchor="middle" font-family="Georgia, serif" font-size="3.4" font-weight="bold" letter-spacing="0.4" fill="#1a1200">DECKMASTER</text>
                 <circle cx="6.5" cy="6.5"  r="1.8" fill="#c8980c" stroke="#7a5500" stroke-width="0.4"/>
                 <circle cx="47.5" cy="6.5" r="1.8" fill="#c8980c" stroke="#7a5500" stroke-width="0.4"/>
                 <circle cx="6.5" cy="69.5" r="1.8" fill="#c8980c" stroke="#7a5500" stroke-width="0.4"/>
@@ -840,7 +855,6 @@
             </svg>`;
         }
         function yugiohCardBackSVG() {
-            // Classic YGO card back — dark with Eye of Anubis
             return `<svg viewBox="0 0 54 76" xmlns="http://www.w3.org/2000/svg" width="54" height="76">
                 <defs>
                     <radialGradient id="ygoBg" cx="50%" cy="40%" r="65%">
@@ -852,39 +866,26 @@
                         <stop offset="100%" stop-color="#1a0a50"/>
                     </radialGradient>
                 </defs>
-                <!-- Background -->
                 <rect width="54" height="76" rx="5" fill="url(#ygoBg)"/>
-                <!-- Outer border -->
                 <rect x="2" y="2" width="50" height="72" rx="4" fill="none" stroke="#7755cc" stroke-width="1.2"/>
                 <rect x="3.5" y="3.5" width="47" height="69" rx="3" fill="none" stroke="#553399" stroke-width="0.5"/>
-                <!-- Diamond grid pattern in background -->
                 <line x1="0" y1="19" x2="54" y2="19" stroke="rgba(119,85,204,0.12)" stroke-width="0.5"/>
                 <line x1="0" y1="38" x2="54" y2="38" stroke="rgba(119,85,204,0.12)" stroke-width="0.5"/>
                 <line x1="0" y1="57" x2="54" y2="57" stroke="rgba(119,85,204,0.12)" stroke-width="0.5"/>
                 <line x1="13" y1="0" x2="13" y2="76" stroke="rgba(119,85,204,0.12)" stroke-width="0.5"/>
                 <line x1="27" y1="0" x2="27" y2="76" stroke="rgba(119,85,204,0.12)" stroke-width="0.5"/>
                 <line x1="41" y1="0" x2="41" y2="76" stroke="rgba(119,85,204,0.12)" stroke-width="0.5"/>
-                <!-- Central circle -->
                 <circle cx="27" cy="38" r="18" fill="url(#ygoCenter)" stroke="#7755cc" stroke-width="1"/>
-                <!-- Eye of Anubis — simplified iconic version -->
-                <!-- Eye whites -->
                 <ellipse cx="27" cy="36" rx="10" ry="6" fill="#e8d890"/>
-                <!-- Iris -->
                 <ellipse cx="27" cy="36" rx="6" ry="5" fill="#c8a020"/>
-                <!-- Pupil -->
                 <ellipse cx="27" cy="36" rx="3" ry="4" fill="#1a0a30"/>
-                <!-- Eye shine -->
                 <ellipse cx="25" cy="34.5" rx="1.2" ry="1" fill="rgba(255,255,255,0.7)"/>
-                <!-- Upper eyelid line -->
                 <path d="M17,36 Q27,28 37,36" fill="none" stroke="#8b6600" stroke-width="1" stroke-linecap="round"/>
-                <!-- Lower kohl lines (Anubis markings) -->
                 <path d="M23,40 L20,46" stroke="#c8a020" stroke-width="0.9" stroke-linecap="round"/>
                 <path d="M31,40 L34,46" stroke="#c8a020" stroke-width="0.9" stroke-linecap="round"/>
-                <!-- Ankh below -->
                 <line x1="27" y1="50" x2="27" y2="58" stroke="#7755cc" stroke-width="1"/>
                 <line x1="23" y1="53" x2="31" y2="53" stroke="#7755cc" stroke-width="1"/>
                 <ellipse cx="27" cy="50.5" rx="2.5" ry="3" fill="none" stroke="#7755cc" stroke-width="1"/>
-                <!-- Corner stars -->
                 <circle cx="9"  cy="9"  r="1.5" fill="#7755cc" opacity="0.8"/>
                 <circle cx="45" cy="9"  r="1.5" fill="#7755cc" opacity="0.8"/>
                 <circle cx="9"  cy="67" r="1.5" fill="#7755cc" opacity="0.8"/>
@@ -898,13 +899,10 @@
             yugioh:  yugiohCardBackSVG,
         };
 
-        // Build the deck HTML — 3 stacked card layers + top card
         function deckButtonHTML(cat, dir, btnVisibility, meta) {
             const backFn   = CARD_BACK_FN[cat] || magicCardBackSVG;
             const flickDir = dir === -1 ? 'left' : 'right';
             const label    = dir === -1 ? 'Previous' : 'Next';
-            // Offset each layer slightly so they look stacked
-            // Layer 0 = bottom, layer 2 = just under top, top = top card
             return `
             <button id="btn-${dir === -1 ? 'left' : 'right'}-${cat}"
                     onclick="scrollRow('${cat}', ${dir})"
@@ -912,19 +910,15 @@
                     data-flick-dir="${flickDir}"
                     aria-label="${label}"
                     style="${btnVisibility}">
-                <!-- Bottom layer -->
                 <div class="deck-card" style="bottom:4px; left:50%; transform:translateX(-50%) rotate(-4deg) translateY(0); z-index:1; background:#111;">
                     ${backFn()}
                 </div>
-                <!-- Middle layer -->
                 <div class="deck-card" style="bottom:2px; left:50%; transform:translateX(-50%) rotate(-2deg) translateY(0); z-index:2; background:#111;">
                     ${backFn()}
                 </div>
-                <!-- Second-from-top -->
                 <div class="deck-card" style="bottom:0; left:50%; transform:translateX(-50%) rotate(-0.5deg) translateY(0); z-index:3; background:#111;">
                     ${backFn()}
                 </div>
-                <!-- Top card (interactive, flicks off) -->
                 <div class="deck-top" style="background:#111;" data-deck-top>
                     ${backFn()}
                 </div>
@@ -937,7 +931,6 @@
             yugioh:  { label: 'YU-GI-OH', accent: 'from-purple-400 to-pink-500', borderColor: 'rgba(168,85,247,0.5)', glowColor: 'rgba(168,85,247,0.2)' },
         };
 
-        // Responsive page size — how many cards to show per row
         function getPageSize() {
             if (window.innerWidth < 480)  return 1;
             if (window.innerWidth < 700)  return 2;
@@ -985,6 +978,7 @@
 
             if (allListings.length === 0) {
                 empty.classList.remove('hidden');
+                rows.classList.add('hidden');
                 return;
             }
 
@@ -997,24 +991,16 @@
                 if (items.length === 0) return '';
                 const meta = CATEGORY_META[cat] || { label: cat.toUpperCase(), accent: 'from-gray-400 to-gray-600', borderColor: 'rgba(255,255,255,0.3)', glowColor: 'rgba(255,255,255,0.1)' };
 
-                // Only render the first PAGE_SIZE items on load
                 const initialItems = items.slice(0, PAGE_SIZE);
                 const canScroll = items.length > getPageSize();
-
-                // Grid columns: responsive based on screen width
                 const visibleCols = Math.min(items.length, getPageSize());
                 const gridStyle = `grid-template-columns: repeat(${visibleCols}, 1fr); gap: 12px;`;
-
-                // Hide scroll buttons if there's nothing to scroll
                 const btnVisibility = canScroll ? '' : 'visibility:hidden; pointer-events:none;';
 
                 return `
                     <div class="relative pt-6 pb-0">
-                        <!-- ambient glow -->
                         <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-32 opacity-20 pointer-events-none"
                              style="background: radial-gradient(ellipse, ${meta.glowColor}, transparent 70%); filter: blur(30px);"></div>
-
-                        <!-- Header -->
                         <div class="flex items-center mb-6 relative z-10">
                             <div class="w-1 h-8 rounded-full mr-3" style="background: linear-gradient(to bottom, ${meta.borderColor}, ${meta.glowColor});"></div>
                             <h3 class="font-orbitron text-xl font-bold">
@@ -1022,18 +1008,8 @@
                             </h3>
                             <span class="ml-3 text-xs text-gray-500 font-semibold">${items.length} listing${items.length !== 1 ? 's' : ''}</span>
                         </div>
-
-                        <!--
-                            FIX: Buttons are flex siblings of the card grid, not absolutely positioned.
-                            This means they always sit exactly at the left/right edges of the card row
-                            at every viewport size — no JS measurement needed.
-                        -->
                         <div class="relative z-10 flex items-center gap-4" style="align-items:center;">
-
-                            <!-- Left deck button -->
                             ${deckButtonHTML(cat, -1, btnVisibility, meta)}
-
-                            <!-- Card grid — overflow:hidden clips cards during exit/enter animation -->
                             <div class="flex-1 overflow-hidden" style="padding:8px 0;margin:-8px 0;">
                             <div id="row-${cat}"
                                  class="grid pb-4"
@@ -1042,13 +1018,8 @@
                                  data-cat="${cat}">
                                 ${initialItems.map(cardHTML).join('')}
                             </div></div>
-
-                            <!-- Right deck button -->
                             ${deckButtonHTML(cat, 1, btnVisibility, meta)}
-
                         </div>
-
-                        <!-- bottom decorative divider -->
                         <div class="mt-2 relative overflow-hidden rounded-xl" style="height: 40px;">
                             <canvas class="row-divider-canvas absolute inset-0 w-full h-full"></canvas>
                         </div>
@@ -1063,7 +1034,6 @@
         let _audioCtx = null;
         function getAudioCtx() {
             if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            // Resume if suspended (browser autoplay policy)
             if (_audioCtx.state === 'suspended') _audioCtx.resume();
             return _audioCtx;
         }
@@ -1073,128 +1043,79 @@
                 try {
                     const ctx = getAudioCtx();
                     const now = ctx.currentTime;
-
-                    // ── Master output gain (keep overall level gentle) ──────────
                     const master = ctx.createGain();
                     master.gain.value = 0.55;
                     master.connect(ctx.destination);
-
-                    // ── 1. SWOOSH — filtered noise that sweeps from high to low ─
-                    // This is the airy "fwip" of the card travelling through the air
                     const swooshLen  = Math.ceil(ctx.sampleRate * 0.18);
                     const swooshBuf  = ctx.createBuffer(1, swooshLen, ctx.sampleRate);
                     const swooshData = swooshBuf.getChannelData(0);
-                    for (let i = 0; i < swooshLen; i++) {
-                        swooshData[i] = Math.random() * 2 - 1;
-                    }
+                    for (let i = 0; i < swooshLen; i++) swooshData[i] = Math.random() * 2 - 1;
                     const swooshSrc = ctx.createBufferSource();
                     swooshSrc.buffer = swooshBuf;
                     swooshSrc.playbackRate.value = 1.0;
-
-                    // Band-pass sweeping down — card whoosh lives around 800–2000 Hz
                     const swooshBP = ctx.createBiquadFilter();
                     swooshBP.type  = 'bandpass';
                     swooshBP.frequency.setValueAtTime(2200, now);
                     swooshBP.frequency.exponentialRampToValueAtTime(600, now + 0.16);
                     swooshBP.Q.value = 1.8;
-
-                    // Low-pass to keep it soft, not harsh
                     const swooshLP = ctx.createBiquadFilter();
                     swooshLP.type  = 'lowpass';
                     swooshLP.frequency.value = 3500;
-
-                    // Envelope: quick rise, smooth decay — the swoosh arc
                     const swooshGain = ctx.createGain();
                     swooshGain.gain.setValueAtTime(0,    now);
                     swooshGain.gain.linearRampToValueAtTime(0.6,  now + 0.012);
                     swooshGain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
-
-                    swooshSrc.connect(swooshBP);
-                    swooshBP.connect(swooshLP);
-                    swooshLP.connect(swooshGain);
-                    swooshGain.connect(master);
-                    swooshSrc.start(now);
-                    swooshSrc.stop(now + 0.18);
-
-                    // ── 2. THUD — the papery landing impact ──────────────────────
-                    // Short noise burst shaped to sound like card hitting table
-                    const thudDelay  = 0.10; // lands slightly into the swoosh
+                    swooshSrc.connect(swooshBP); swooshBP.connect(swooshLP); swooshLP.connect(swooshGain); swooshGain.connect(master);
+                    swooshSrc.start(now); swooshSrc.stop(now + 0.18);
+                    const thudDelay  = 0.10;
                     const thudLen    = Math.ceil(ctx.sampleRate * 0.07);
                     const thudBuf    = ctx.createBuffer(1, thudLen, ctx.sampleRate);
                     const thudData   = thudBuf.getChannelData(0);
-                    for (let i = 0; i < thudLen; i++) {
-                        // Slightly softer noise — more papery
-                        thudData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (thudLen * 0.3));
-                    }
+                    for (let i = 0; i < thudLen; i++) thudData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (thudLen * 0.3));
                     const thudSrc = ctx.createBufferSource();
                     thudSrc.buffer = thudBuf;
-
-                    // Low-mid band — the "thwack" of card on felt/table
                     const thudBP = ctx.createBiquadFilter();
                     thudBP.type  = 'bandpass';
                     thudBP.frequency.setValueAtTime(900, now + thudDelay);
                     thudBP.frequency.exponentialRampToValueAtTime(300, now + thudDelay + 0.06);
                     thudBP.Q.value = 1.2;
-
                     const thudGain = ctx.createGain();
                     thudGain.gain.setValueAtTime(0,    now + thudDelay);
                     thudGain.gain.linearRampToValueAtTime(0.9,  now + thudDelay + 0.004);
                     thudGain.gain.exponentialRampToValueAtTime(0.001, now + thudDelay + 0.065);
-
-                    thudSrc.connect(thudBP);
-                    thudBP.connect(thudGain);
-                    thudGain.connect(master);
-                    thudSrc.start(now + thudDelay);
-                    thudSrc.stop(now + thudDelay + 0.07);
-
-                    // ── 3. PAPER RATTLE — tiny high-freq flutter at landing ──────
-                    // The papery flutter you hear as the card settles
+                    thudSrc.connect(thudBP); thudBP.connect(thudGain); thudGain.connect(master);
+                    thudSrc.start(now + thudDelay); thudSrc.stop(now + thudDelay + 0.07);
                     const rattleDelay = 0.105;
                     const rattleLen   = Math.ceil(ctx.sampleRate * 0.04);
                     const rattleBuf   = ctx.createBuffer(1, rattleLen, ctx.sampleRate);
                     const rattleData  = rattleBuf.getChannelData(0);
-                    for (let i = 0; i < rattleLen; i++) {
-                        rattleData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (rattleLen * 0.2));
-                    }
+                    for (let i = 0; i < rattleLen; i++) rattleData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (rattleLen * 0.2));
                     const rattleSrc = ctx.createBufferSource();
                     rattleSrc.buffer = rattleBuf;
-
                     const rattleHP = ctx.createBiquadFilter();
                     rattleHP.type  = 'highpass';
                     rattleHP.frequency.value = 4000;
-
                     const rattleGain = ctx.createGain();
                     rattleGain.gain.setValueAtTime(0,    now + rattleDelay);
                     rattleGain.gain.linearRampToValueAtTime(0.25, now + rattleDelay + 0.003);
                     rattleGain.gain.exponentialRampToValueAtTime(0.001, now + rattleDelay + 0.038);
-
-                    rattleSrc.connect(rattleHP);
-                    rattleHP.connect(rattleGain);
-                    rattleGain.connect(master);
-                    rattleSrc.start(now + rattleDelay);
-                    rattleSrc.stop(now + rattleDelay + 0.04);
-
-                } catch(e) { /* audio not available — silently skip */ }
+                    rattleSrc.connect(rattleHP); rattleHP.connect(rattleGain); rattleGain.connect(master);
+                    rattleSrc.start(now + rattleDelay); rattleSrc.stop(now + rattleDelay + 0.04);
+                } catch(e) { /* audio not available */ }
             }, delayMs);
         }
 
-        // ─── Deck flick helper — animates top card off the deck on click ──────────
+        // ─── Deck flick helper ─────────────────────────────────────────────────────
         function triggerDeckFlick(cat, dir) {
             const btnId  = dir === 1 ? 'btn-right-' + cat : 'btn-left-' + cat;
             const btn    = document.getElementById(btnId);
             if (!btn) return;
             const top = btn.querySelector('[data-deck-top]');
             if (!top) return;
-
-            // Remove any previous flick class first
             top.classList.remove('deck-flick-left', 'deck-flick-right');
-            // Force reflow so re-adding works
             void top.offsetWidth;
-
             const flickClass = dir === 1 ? 'deck-flick-left' : 'deck-flick-right';
             top.classList.add(flickClass);
-
-            // After flick, snap back invisibly so it's ready for next click
             setTimeout(function() {
                 top.classList.remove(flickClass);
                 top.style.opacity = '0';
@@ -1206,7 +1127,7 @@
             }, 500);
         }
 
-        // ─── Scroll rows — card dealing animation ──────────────────────────────────
+        // ─── Scroll rows ────────────────────────────────────────────────────────────
         var rowScrolling = {};
 
         function scrollRow(cat, dir) {
@@ -1218,37 +1139,25 @@
             if (items.length <= PAGE_SIZE) return;
 
             rowScrolling[cat] = true;
-
-            // Flick the top card off the deck button
             triggerDeckFlick(cat, dir);
 
             const current = parseInt(el.dataset.offset || '0');
             const next    = ((current + dir * PAGE_SIZE) % items.length + items.length) % items.length;
 
-            // The button that was clicked is the "deck" origin point
             const deckBtn     = document.getElementById(dir === 1 ? 'btn-right-' + cat : 'btn-left-' + cat);
             const deckBtnRect = deckBtn ? deckBtn.getBoundingClientRect() : null;
             const rowRect     = el.getBoundingClientRect();
 
-            // Build incoming card list
             const incoming = [];
-            for (let i = 0; i < PAGE_SIZE; i++) {
-                incoming.push(items[(next + i) % items.length]);
-            }
+            for (let i = 0; i < PAGE_SIZE; i++) incoming.push(items[(next + i) % items.length]);
 
-            // ── PHASE 1: cards snap back to the deck button ───────────────────────
             const outCards  = Array.from(el.children);
-            const SNAP_STAGGER = 45;  // ms between each card starting its snap-back
-            const SNAP_DUR     = 260; // ms to snap back
+            const SNAP_STAGGER = 45;
+            const SNAP_DUR     = 260;
 
-            // Snap order: card closest to the button exits first
-            // dir=1 (right button clicked) → rightmost card (last) exits first
-            // dir=-1 (left button clicked) → leftmost card (first) exits first
             outCards.forEach(function(card, i) {
                 const snapOrder = dir === 1 ? (outCards.length - 1 - i) : i;
                 const delay     = snapOrder * SNAP_STAGGER;
-
-                // Compute where this card needs to travel to reach the deck button
                 let tx = 0, ty = 0;
                 if (deckBtnRect && rowRect) {
                     const cardRect = card.getBoundingClientRect();
@@ -1262,20 +1171,15 @@
                     tx = dir * 120 + '%';
                     ty = 0;
                 }
-
                 card.style.transition = 'none';
                 card.style.transformOrigin = 'center center';
-                card.style.zIndex = snapOrder; // closer cards stack on top as they arrive
-
+                card.style.zIndex = snapOrder;
                 setTimeout(function() {
-                    // Soft fwip as card snaps back to deck
                     playCardFlick(0);
-
                     card.style.transition =
                         'transform ' + SNAP_DUR + 'ms cubic-bezier(0.55,0,1,0.7), ' +
                         'opacity '   + (SNAP_DUR * 0.6) + 'ms ease ' + (SNAP_DUR * 0.3) + 'ms, ' +
                         'filter '    + SNAP_DUR + 'ms ease';
-                    // Arc toward the deck: translate to button, slight rotation & shrink
                     const spinDeg = dir === 1 ? -15 : 15;
                     card.style.transform =
                         'translate(' + tx + 'px, ' + ty + 'px) ' +
@@ -1286,20 +1190,17 @@
                 }, delay);
             });
 
-            // Wait for all snap-backs to finish
             const totalSnapTime = (outCards.length - 1) * SNAP_STAGGER + SNAP_DUR + 40;
 
-            // ── PHASE 2: deal new cards from the deck button ──────────────────────
             setTimeout(function() {
                 el.innerHTML = incoming.map(cardHTML).join('');
                 el.dataset.offset = next;
                 if (typeof lucide !== 'undefined') lucide.createIcons();
 
                 const inCards       = Array.from(el.children);
-                const DEAL_STAGGER  = 80;  // ms between each card being dealt
-                const DEAL_DUR      = 400; // ms for each card to land
+                const DEAL_STAGGER  = 80;
+                const DEAL_DUR      = 400;
 
-                // Start all cards at the deck button position, face-down / tiny
                 inCards.forEach(function(card, i) {
                     let startX = 0, startY = 0;
                     if (deckBtnRect) {
@@ -1314,11 +1215,9 @@
                         startX = dir * -110 + '%';
                         startY = 0;
                     }
-
                     card.style.transition  = 'none';
                     card.style.transformOrigin = 'center center';
                     card.style.zIndex = i;
-                    // Begin at deck position — small, rotated
                     const startSpin = dir === 1 ? 20 : -20;
                     card.style.transform =
                         'translate(' + startX + 'px, ' + startY + 'px) ' +
@@ -1328,17 +1227,11 @@
                     card.style.filter  = 'blur(4px)';
                 });
 
-                // Deal each card out with a satisfying arc and thwip
-                // dir=1 (right button) → deal left-to-right starting from rightmost slot
-                // dir=-1 (left button) → deal right-to-left starting from leftmost slot
                 inCards.forEach(function(card, i) {
                     const dealOrder = dir === 1 ? (inCards.length - 1 - i) : i;
                     const delay     = dealOrder * DEAL_STAGGER;
-
                     setTimeout(function() {
-                        // Sound fires as the card decelerates into its landing position
                         playCardFlick(Math.round(DEAL_DUR * 0.72));
-
                         card.style.transition =
                             'transform ' + DEAL_DUR + 'ms cubic-bezier(0.22,1.4,0.58,1), ' +
                             'opacity '   + (DEAL_DUR * 0.4) + 'ms ease, ' +
@@ -1346,7 +1239,6 @@
                         card.style.transform = 'translate(0,0) rotate(0deg) scale(1)';
                         card.style.opacity   = '1';
                         card.style.filter    = 'blur(0px)';
-
                         setTimeout(function() {
                             card.style.transition  = '';
                             card.style.transform   = '';
@@ -1357,12 +1249,8 @@
                     }, delay);
                 });
 
-                // Unlock after all cards are dealt and settled
                 const totalDealTime = (inCards.length - 1) * DEAL_STAGGER + DEAL_DUR + 100;
-                setTimeout(function() {
-                    rowScrolling[cat] = false;
-                }, totalDealTime);
-
+                setTimeout(function() { rowScrolling[cat] = false; }, totalDealTime);
             }, totalSnapTime);
         }
 
@@ -1577,9 +1465,6 @@
         }
 
         // ─── Stripe Checkout ────────────────────────────────────────────────────────
-        const WORKER_URL = 'https://dadcheckout.juggaloateyourdog.workers.dev';
-        const STRIPE_PUBLISHABLE_KEY = 'pk_live_51T6NVfFQVMSqOCYO3pQ8TNsm6uGja3rFLcY8c8eosYLAvhCvHWvsSm4w5G2x31zn7SLdiF9essSWFPSwEhY5oRUH00s5bOdvPM';
-
         let stripe = null;
         let elements = null;
         let paymentElement = null;
@@ -1816,7 +1701,8 @@
         }
 
         // ─── Init ───────────────────────────────────────────────────────────────────
-        loadListings();
+        loadListings();       // initial load
+        startPolling();       // begin 30-second background poll
         loadLatestHit();
 
         async function loadLatestHit() {
@@ -1836,5 +1722,3 @@
     <script src="https://player.twitch.tv/js/embed/v1.js" onload="initTwitchPlayer()"></script>
 </body>
 </html>
-
-
