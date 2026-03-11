@@ -422,10 +422,12 @@
         </div>
     </section>
 
+    <style> .footer-modal-data { display: none; } </style>
+
     <!-- Footer -->
     <footer class="border-t border-white/10 bg-black/40 backdrop-blur-sm pt-12 pb-8 px-4 sm:px-6 lg:px-8">
         <div class="max-w-7xl mx-auto">
-            <div class="grid md:grid-cols-4 gap-8 mb-8">
+            <div class="grid md:grid-cols-3 gap-8 mb-8">
                 <div class="space-y-4">
                     <div class="flex items-center space-x-2">
                         <img src="https://static-cdn.jtvnw.net/jtv_user_pictures/681047d0-0d03-48bd-8914-08b3787b00ac-profile_image-300x300.jpeg" alt="Daddington77" class="w-6 h-6 rounded-full object-cover">
@@ -433,32 +435,37 @@
                     </div>
                     <p class="text-gray-400 text-sm">The most trusted name in live TCG breaking. Authentic pulls, instant service.</p>
                 </div>
-                <div>
-                    <h4 class="font-bold mb-4 text-cyan-400">SHOP</h4>
-                    <ul class="space-y-2 text-gray-400 text-sm">
-                        <li><a href="#" class="hover:text-white transition-colors">Current Breaks</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Singles</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Sealed Product</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Graded Cards</a></li>
-                    </ul>
-                </div>
+
+                <!-- =====================================================
+                     COMMUNITY LINKS — edit the button labels and modal
+                     content below. Each <li> is one link in the footer.
+                     The onclick="openFooterModal('modal-ID')" must match
+                     the id of its <div> in the MODALS section further down.
+                     ===================================================== -->
                 <div>
                     <h4 class="font-bold mb-4 text-purple-400">COMMUNITY</h4>
                     <ul class="space-y-2 text-gray-400 text-sm">
-                        <li><a href="#" class="hover:text-white transition-colors">Discord</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Twitch</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">YouTube</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Schedule</a></li>
+                        <li><button onclick="openFooterModal('modal-discord')" class="hover:text-white transition-colors hover:underline underline-offset-2">Discord</button></li>
+                        <li><button onclick="openFooterModal('modal-twitch')" class="hover:text-white transition-colors hover:underline underline-offset-2">Twitch</button></li>
+                        <li><button onclick="openFooterModal('modal-youtube')" class="hover:text-white transition-colors hover:underline underline-offset-2">YouTube</button></li>
+                        <li><button onclick="openFooterModal('modal-schedule')" class="hover:text-white transition-colors hover:underline underline-offset-2">Schedule</button></li>
                     </ul>
                 </div>
+                <!-- ===================================================== -->
+
+                <!-- =====================================================
+                     SUPPORT LINKS — same deal as above.
+                     ===================================================== -->
                 <div>
                     <h4 class="font-bold mb-4 text-pink-400">SUPPORT</h4>
                     <ul class="space-y-2 text-gray-400 text-sm">
-                        <li><a href="#" class="hover:text-white transition-colors">FAQ</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Shipping Policy</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Contact Us</a></li>
+                        <li><button onclick="openFooterModal('modal-faq')" class="hover:text-white transition-colors hover:underline underline-offset-2">FAQ</button></li>
+                        <li><button onclick="openFooterModal('modal-shipping')" class="hover:text-white transition-colors hover:underline underline-offset-2">Shipping Policy</button></li>
+                        <li><button onclick="openFooterModal('modal-contact')" class="hover:text-white transition-colors hover:underline underline-offset-2">Contact Us</button></li>
                     </ul>
                 </div>
+                <!-- ===================================================== -->
+
             </div>
             <div class="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
                 <p>&copy; 2024 Daddington77. Not affiliated with Nintendo, Wizards, or Konami.</p>
@@ -469,6 +476,122 @@
             </div>
         </div>
     </footer>
+
+    <!-- =================================================================
+         FOOTER MODAL CONTENTS — edit each modal's title and body here.
+         Each <div id="modal-XXX"> corresponds to one footer button above.
+         title=""  →  the heading shown at the top of the popup
+         Everything inside the <div class="modal-body"> is the popup content.
+         ================================================================= -->
+
+    <!-- Discord modal -->
+    <div id="modal-discord" class="footer-modal-data" title="Join the Discord">
+        <div class="modal-body">
+            <p class="text-gray-300 mb-4">Hang out with the community, get break notifications, and chat cards!</p>
+            <a href="https://discord.gg/INVITE_CODE_HERE" target="_blank"
+               class="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-bold transition-all">
+                Join Discord Server
+            </a>
+        </div>
+    </div>
+
+    <!-- Twitch modal -->
+    <div id="modal-twitch" class="footer-modal-data" title="Watch on Twitch">
+        <div class="modal-body">
+            <p class="text-gray-300 mb-4">Follow the channel to get notified every time a live break starts!</p>
+            <a href="https://www.twitch.tv/daddington77" target="_blank"
+               class="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-bold transition-all">
+                Follow on Twitch
+            </a>
+        </div>
+    </div>
+
+    <!-- YouTube modal -->
+    <div id="modal-youtube" class="footer-modal-data" title="YouTube Channel">
+        <div class="modal-body">
+            <p class="text-gray-300 mb-4">Catch VODs, highlights, and pack opening videos on YouTube.</p>
+            <a href="https://youtube.com/@CHANNEL_NAME_HERE" target="_blank"
+               class="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-bold transition-all">
+                Visit YouTube Channel
+            </a>
+        </div>
+    </div>
+
+    <!-- FAQ modal -->
+    <div id="modal-faq" class="footer-modal-data" title="Frequently Asked Questions">
+        <div class="modal-body">
+            <div class="space-y-4">
+                <div>
+                    <p class="font-bold text-cyan-400 mb-1">How does a live break work?</p>
+                    <p class="text-gray-400 text-sm">Buy packs from the store, then tune in to the Twitch stream. I'll open your packs live on camera and you keep every card pulled.</p>
+                </div>
+                <div>
+                    <p class="font-bold text-cyan-400 mb-1">When will my packs be opened?</p>
+                    <p class="text-gray-400 text-sm">Your packs are added to the next scheduled break. Check the stream schedule or follow on Twitch to get notified.</p>
+                </div>
+                <div>
+                    <p class="font-bold text-cyan-400 mb-1">How do I get my cards?</p>
+                    <p class="text-gray-400 text-sm">After the break, all your cards are sleeved and top-loaded. Shipping is arranged directly — reach out via Discord or Twitch chat.</p>
+                </div>
+                <div>
+                    <p class="font-bold text-cyan-400 mb-1">What condition are the packs in?</p>
+                    <p class="text-gray-400 text-sm">All packs are factory sealed.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shipping Policy modal -->
+    <div id="modal-shipping" class="footer-modal-data" title="Shipping Policy">
+        <div class="modal-body">
+            <div class="space-y-3 text-gray-400 text-sm">
+                <p>All cards are sleeved and top-loaded before shipping. Orders ship via USPS First Class or Priority Mail depending on size.</p>
+                <p><span class="text-white font-semibold">Processing time:</span> When get cards?</p>
+                <p><span class="text-white font-semibold">Domestic shipping:</span> $4.99 flat rate for standard orders.</p>
+                <p><span class="text-white font-semibold">International:</span> Contact us via Discord before ordering.</p>
+                <p><span class="text-white font-semibold">Tracking:</span> A tracking number is provided for all Priority Mail shipments.</p>
+                <p class="text-gray-500 text-xs mt-4">Questions? DM on Discord or Twitch chat.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Us modal -->
+    <div id="modal-contact" class="footer-modal-data" title="Get in Touch">
+        <div class="modal-body">
+            <p class="text-gray-300 mb-4">Best ways to reach Daddington77:</p>
+            <div class="space-y-3">
+                <a href="https://discord.gg/INVITE_CODE_HERE" target="_blank"
+                   class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-all border border-white/10">
+                    <span class="text-indigo-400 font-bold">Discord</span>
+                    <span class="text-gray-400 text-sm">Fastest response — DM or ask in server</span>
+                </a>
+                <a href="https://www.twitch.tv/daddington77" target="_blank"
+                   class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-all border border-white/10">
+                    <span class="text-purple-400 font-bold">Twitch Chat</span>
+                    <span class="text-gray-400 text-sm">Catch me live and ask in chat</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    <!-- ================================================================= -->
+
+    <!-- FOOTER POPUP MODAL (shared shell — do not edit this part) -->
+    <div id="footerModal" class="fixed inset-0 z-[70] hidden items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/85 backdrop-blur-md" onclick="closeFooterModal()"></div>
+        <div class="relative w-full max-w-md glass border border-white/10 rounded-2xl overflow-hidden"
+             style="animation: successPop 0.3s cubic-bezier(0.34,1.56,0.64,1) both;">
+            <div style="height:2px; background: linear-gradient(90deg, #bc13fe, #00f3ff, #39ff14);"></div>
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-5">
+                    <h3 id="footerModalTitle" class="font-orbitron text-lg font-bold text-white"></h3>
+                    <button onclick="closeFooterModal()" class="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div id="footerModalContent" class="text-sm"></div>
+            </div>
+        </div>
+    </div>
 
     <!-- SUCCESS MODAL -->
     <div id="successModal" class="fixed inset-0 z-[80] items-center justify-center p-4">
@@ -1324,7 +1447,8 @@
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
+                const href = this.getAttribute('href');
+                const target = href && href !== '#' ? document.querySelector(href) : null;
                 if (target) {
                     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     document.getElementById('mobileMenu').classList.add('hidden');
@@ -1699,6 +1823,28 @@
                 draw();
             });
         }
+
+        // ─── Footer modals ──────────────────────────────────────────────────────────
+        function openFooterModal(id) {
+            const src = document.getElementById(id);
+            if (!src) return;
+            document.getElementById('footerModalTitle').textContent = src.getAttribute('title');
+            document.getElementById('footerModalContent').innerHTML = src.querySelector('.modal-body').innerHTML;
+            const modal = document.getElementById('footerModal');
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function closeFooterModal() {
+            const modal = document.getElementById('footerModal');
+            modal.classList.add('hidden');
+            modal.style.display = '';
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeFooterModal(); });
 
         // ─── Init ───────────────────────────────────────────────────────────────────
         loadListings();       // initial load
