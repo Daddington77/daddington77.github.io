@@ -1381,6 +1381,20 @@
         function addToCart(id) {
             const item = allListings.find(i => i.id === id);
             if (!item) return;
+            const inCart = cart.filter(i => i.id === id).length;
+            if (inCart >= item.stock) {
+                const btn = event.target.closest('button');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '✗';
+                btn.style.background = 'rgba(239,68,68,0.3)';
+                btn.style.borderColor = 'rgba(239,68,68,0.6)';
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.style.background = '';
+                    btn.style.borderColor = '';
+                }, 1500);
+                return;
+            }
             cart.push({ ...item, cartId: Date.now() });
             updateCart();
             const btn = event.target.closest('button');
