@@ -1,0 +1,101 @@
+name: Auto Stream Notifier
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check Twitch stream status
+        id: twitch
+        run: |
+          # Fetch Twitch page
+          response=$(curl -s -A "Mozilla/5.0" "https://www.twitch.tv/daddington77")
+
+          # Check if live
+          if echo "$response" | grep -q '"isLiveBroadcast":true'; then
+            is_live=true
+          elif echo "$response" | grep -qi 'class=".*live'; then
+            is_live=true
+          else
+            is_live=false
+          fi
+
+          echo "is_live=$is_live" >> $GITHUB_OUTPUT
+
+          # Extract stream title (from og:description or title meta tag)
+          title=$(echo "$response" | grep -oP 'property="og:description"[^>]*content="\K[^"]+' | head -1)
+          if [ -z "$title" ]; then
+            title=$(echo "$response" | grep -oP '<title>\K[^<]+' | head -1)
+          fi
+          echo "title=${title:-No title}" >> $GITHUB_OUTPUT
+
+          # Extract game/category (look for game name in page data)
+          game=$(echo "$response" | grep -oP '"displayName":"[^"]*"' | grep -oP ':\K"[^"]+' | head -1 | tr -d '"')
+          if [ -z "$game" ]; then
+            game="Stream"
+          fi
+          echo "game=${game}" >> $GITHUB_OUTPUT
+
+      - name: Load previous state
+        id: state
+        run: |
+          if [ -f .github/stream-state.json ]; then
+            was_live=$(jq -r '.live' .github/stream-state.json)
+            echo "was_live=$was_live" >> $GITHUB_OUTPUT
+          else
+            echo "was_live=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Save current state
+        run: |
+          mkdir -p .github
+          echo "{\"live\":${{ steps.twitch.outputs.is_live }},\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > .github/stream-state.json
+          git config --local user.email "action@github.com"
+          git config --local user.name "stream-notifier"
+          git add .github/stream-state.json
+          git commit -m "update stream state" || true
+          git push || true
+
+      - name: Update channel name to LIVE
+        if: steps.twitch.outputs.is_live == 'true'
+        run: |
+          curl -X PATCH "https://discord.com/api/v10/channels/1491668777702785046" \
+            -H "Authorization: Bot ${{ secrets.DISCORD_BOT_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"name": "🟢-livestream"}'
+
+      - name: Update channel name to OFFLINE
+        if: steps.twitch.outputs.is_live == 'false'
+        run: |
+          curl -X PATCH "https://discord.com/api/v10/channels/1491668777702785046" \
+            -H "Authorization: Bot ${{ secrets.DISCORD_BOT_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"name": "🔘-offline"}'
+
+      - name: Post notification when goes live
+        if: steps.twitch.outputs.is_live == 'true' && steps.state.outputs.was_live == 'false'
+        run: |
+          curl -X POST "${{ secrets.DISCORD_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "content": "@everyone",
+              "embeds": [{
+                "title": "${{ steps.twitch.outputs.title }}",
+                "description": "**daddington77 is LIVE on Twitch!**",
+                "url": "https://twitch.tv/daddington77",
+                "color": 65280,
+                "fields": [
+                  {"name": "Game", "value": "${{ steps.twitch.outputs.game }}", "inline": true},
+                  {"name": "Watch", "value": "[Join Stream](https://twitch.tv/daddington77)", "inline": true}
+                ],
+                "footer": {"text": "Daddington77 Break Store"}
+              }]
+            }'
