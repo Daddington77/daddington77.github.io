@@ -13,36 +13,45 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Playwright
+        run: npm install -g playwright
+
       - name: Check Twitch stream status
         id: twitch
         run: |
-          # Fetch Twitch page
-          response=$(curl -s -A "Mozilla/5.0" "https://www.twitch.tv/daddington77")
+          node << 'EOF'
+          const { chromium } = require('playwright');
 
-          # Check if live
-          if echo "$response" | grep -q '"isLiveBroadcast":true'; then
-            is_live=true
-          elif echo "$response" | grep -qi 'class=".*live'; then
-            is_live=true
-          else
-            is_live=false
-          fi
+          (async () => {
+            const browser = await chromium.launch();
+            const page = await browser.newPage();
+            await page.goto('https://www.twitch.tv/daddington77', { waitUntil: 'networkidle' });
 
-          echo "is_live=$is_live" >> $GITHUB_OUTPUT
+            const isLive = await page.evaluate(() => {
+              return document.body.innerText.includes('LIVE');
+            });
 
-          # Extract stream title (from og:description or title meta tag)
-          title=$(echo "$response" | grep -oP 'property="og:description"[^>]*content="\K[^"]+' | head -1)
-          if [ -z "$title" ]; then
-            title=$(echo "$response" | grep -oP '<title>\K[^<]+' | head -1)
-          fi
-          echo "title=${title:-No title}" >> $GITHUB_OUTPUT
+            const title = await page.evaluate(() => {
+              const titleEl = document.querySelector('h1');
+              return titleEl ? titleEl.innerText : '';
+            });
 
-          # Extract game name from span
-          game=$(echo "$response" | grep -oP 'CoreText-sc-1txzju1-0[^>]*>\K[^<]+' | head -1)
-          if [ -z "$game" ]; then
-            game="Stream"
-          fi
-          echo "game=${game}" >> $GITHUB_OUTPUT
+            const game = await page.evaluate(() => {
+              const gameEl = document.evaluate("//span[contains(@class, 'CoreText')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+              return gameEl ? gameEl.innerText : 'Stream';
+            });
+
+            console.log(`::set-output name=is_live::${isLive}`);
+            console.log(`::set-output name=title::${title || 'Stream'}`);
+            console.log(`::set-output name=game::${game}`);
+
+            await browser.close();
+          })();
+          EOF
 
       - name: Load previous state
         id: state
