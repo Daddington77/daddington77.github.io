@@ -16,8 +16,10 @@ jobs:
       - name: Check Twitch stream status
         id: twitch
         run: |
+          # Fetch Twitch page
           response=$(curl -s -A "Mozilla/5.0" "https://www.twitch.tv/daddington77")
 
+          # Check if live
           if echo "$response" | grep -q '"isLiveBroadcast":true'; then
             is_live=true
           elif echo "$response" | grep -qi 'class=".*live'; then
@@ -28,14 +30,12 @@ jobs:
 
           echo "is_live=$is_live" >> $GITHUB_OUTPUT
 
-          title=$(echo "$response" | grep -oP '"broadcastType":".*?"title":"\K[^"]+' | head -1)
+          # Extract stream title (from og:description or title meta tag)
+          title=$(echo "$response" | grep -oP 'property="og:description"[^>]*content="\K[^"]+' | head -1)
           if [ -z "$title" ]; then
-            title=$(echo "$response" | grep -oP '"title":"?\K[^"]+' | head -1)
+            title=$(echo "$response" | grep -oP '<title>\K[^<]+' | head -1)
           fi
-          if [ -z "$title" ]; then
-            title="Stream"
-          fi
-          echo "title=${title}" >> $GITHUB_OUTPUT
+          echo "title=${title:-No title}" >> $GITHUB_OUTPUT
 
       - name: Load previous state
         id: state
@@ -86,7 +86,7 @@ jobs:
                 "url": "https://twitch.tv/daddington77",
                 "color": 65280,
                 "fields": [
-                  {"name": "Watch", "value": "[Join Stream](https://twitch.tv/daddington77)", "inline": false}
+                  {"name": "Watch", "value": "[Join Stream](https://twitch.tv/daddington77)", "inline": true}
                 ],
                 "footer": {"text": "Daddington77 Break Store"}
               }]
