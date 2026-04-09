@@ -37,11 +37,8 @@ jobs:
           fi
           echo "title=${title:-No title}" >> $GITHUB_OUTPUT
 
-          # Extract game/category
-          game=$(echo "$response" | grep -oP '"gameName":"?\K[^",}]+' | head -1)
-          if [ -z "$game" ]; then
-            game=$(echo "$response" | grep -oP 'game_name":"?\K[^",}]+' | head -1)
-          fi
+          # Extract game name from span
+          game=$(echo "$response" | grep -oP 'CoreText-sc-1txzju1-0[^>]*>\K[^<]+' | head -1)
           if [ -z "$game" ]; then
             game="Stream"
           fi
