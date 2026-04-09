@@ -41,7 +41,8 @@ jobs:
             });
 
             const game = await page.evaluate(() => {
-              const gameEl = document.evaluate("//span[contains(@class, 'CoreText')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+              const xpath = "/html/body/div[1]/div[1]/div[1]/div/main/div[1]/div/div[1]/div/div[2]/div/section/div/div/div[2]/div[2]/div[2]/div[1]/div/div[2]/div/div/div[1]/a/span";
+              const gameEl = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
               return gameEl ? gameEl.innerText : 'Stream';
             });
 
