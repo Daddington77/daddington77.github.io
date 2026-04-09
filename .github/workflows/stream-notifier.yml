@@ -15,16 +15,18 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
 
       - name: Install Playwright
-        run: npm install -g playwright
+        run: |
+          npm init -y
+          npm install playwright
 
       - name: Check Twitch stream status
         id: twitch
         run: |
           node << 'EOF'
-          const { chromium } = require('playwright');
+          const { chromium } = require('./node_modules/playwright');
 
           (async () => {
             const browser = await chromium.launch();
