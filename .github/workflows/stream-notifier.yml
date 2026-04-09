@@ -79,7 +79,7 @@ jobs:
           curl -X POST "${{ secrets.DISCORD_WEBHOOK }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "content": "",
+              "content": "@everyone",
               "embeds": [{
                 "title": "${{ steps.twitch.outputs.title }}",
                 "description": "**daddington77 is LIVE on Twitch!**",
