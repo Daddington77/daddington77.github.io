@@ -13,48 +13,26 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Install Playwright
-        run: |
-          npm init -y
-          npm install playwright
-
       - name: Check Twitch stream status
         id: twitch
         run: |
-          node << 'EOF'
-          const { chromium } = require('./node_modules/playwright');
+          response=$(curl -s -A "Mozilla/5.0" "https://www.twitch.tv/daddington77")
 
-          (async () => {
-            const browser = await chromium.launch();
-            const page = await browser.newPage();
-            await page.goto('https://www.twitch.tv/daddington77', { waitUntil: 'networkidle' });
+          if echo "$response" | grep -q '"isLiveBroadcast":true'; then
+            is_live=true
+          elif echo "$response" | grep -qi 'class=".*live'; then
+            is_live=true
+          else
+            is_live=false
+          fi
 
-            const isLive = await page.evaluate(() => {
-              return document.body.innerText.includes('LIVE');
-            });
+          echo "is_live=$is_live" >> $GITHUB_OUTPUT
 
-            const title = await page.evaluate(() => {
-              const titleEl = document.querySelector('h1');
-              return titleEl ? titleEl.innerText : '';
-            });
-
-            const game = await page.evaluate(() => {
-              const xpath = "/html/body/div[1]/div[1]/div[1]/div/main/div[1]/div/div[1]/div/div[2]/div/section/div/div/div[2]/div[2]/div[2]/div[1]/div/div[2]/div/div/div[1]/a/span";
-              const gameEl = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-              return gameEl ? gameEl.innerText : 'Stream';
-            });
-
-            console.log(`::set-output name=is_live::${isLive}`);
-            console.log(`::set-output name=title::${title || 'Stream'}`);
-            console.log(`::set-output name=game::${game}`);
-
-            await browser.close();
-          })();
-          EOF
+          title=$(echo "$response" | grep -oP 'property="og:description"[^>]*content="\K[^"]+' | head -1)
+          if [ -z "$title" ]; then
+            title=$(echo "$response" | grep -oP '<title>\K[^<]+' | head -1)
+          fi
+          echo "title=${title:-Stream}" >> $GITHUB_OUTPUT
 
       - name: Load previous state
         id: state
@@ -105,8 +83,7 @@ jobs:
                 "url": "https://twitch.tv/daddington77",
                 "color": 65280,
                 "fields": [
-                  {"name": "Game", "value": "${{ steps.twitch.outputs.game }}", "inline": true},
-                  {"name": "Watch", "value": "[Join Stream](https://twitch.tv/daddington77)", "inline": true}
+                  {"name": "Watch", "value": "[Join Stream](https://twitch.tv/daddington77)", "inline": false}
                 ],
                 "footer": {"text": "Daddington77 Break Store"}
               }]
