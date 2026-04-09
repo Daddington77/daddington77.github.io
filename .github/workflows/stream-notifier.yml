@@ -28,11 +28,14 @@ jobs:
 
           echo "is_live=$is_live" >> $GITHUB_OUTPUT
 
-          title=$(echo "$response" | grep -oP 'property="og:description"[^>]*content="\K[^"]+' | head -1)
+          title=$(echo "$response" | grep -oP '"broadcastType":".*?"title":"\K[^"]+' | head -1)
           if [ -z "$title" ]; then
-            title=$(echo "$response" | grep -oP '<title>\K[^<]+' | head -1)
+            title=$(echo "$response" | grep -oP '"title":"?\K[^"]+' | head -1)
           fi
-          echo "title=${title:-Stream}" >> $GITHUB_OUTPUT
+          if [ -z "$title" ]; then
+            title="Stream"
+          fi
+          echo "title=${title}" >> $GITHUB_OUTPUT
 
       - name: Load previous state
         id: state
